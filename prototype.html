@@ -56,6 +56,15 @@
   #dLabels{position:absolute;inset:0;z-index:3;pointer-events:none}
   .dlab{position:absolute;transform:translate(-50%,-50%);padding:5px 10px;border-radius:14px;font-size:11px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.82);backdrop-filter:blur(10px);box-shadow:0 3px 12px rgba(40,30,30,.14);white-space:nowrap;opacity:0;transition:opacity .6s}
   .dlab.on{opacity:1}
+  .seg3{display:flex;background:#F0EEEC;border-radius:16px;padding:3px}.seg3 button{flex:1;height:34px;border-radius:13px;font-size:13px;font-weight:500;color:var(--ink2)}.seg3 button.on{background:var(--card);color:var(--ink);font-weight:700;box-shadow:0 2px 8px rgba(40,30,30,.08)}
+  .mview{position:absolute;left:0;right:0;top:160px;bottom:116px;overflow-y:auto;padding:4px 20px 16px}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}.cal .d{height:49px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--ink2);position:relative;border-radius:12px}.cal .d.hd{height:26px;color:var(--ink3)}.cal .d.sel{background:#EDEAE8;color:var(--ink);box-shadow:inset 0 0 0 1px #CFCAC5}.cal .d i{width:17px;height:17px;filter:blur(.4px)}
+  .mpic{flex:1;height:84px;border-radius:14px;background:#EEE center/cover}
+  .gimg{aspect-ratio:1;border-radius:10px;background:#EEE center/cover no-repeat;position:relative;overflow:hidden}.gimg::after{content:attr(data-d);position:absolute;left:6px;bottom:5px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.45)}
+  .titem{display:flex;align-items:center;gap:12px;padding:10px 0}.titem .tm{width:38px;font-size:12px;font-weight:600;color:var(--ink2)}.titem .th{width:64px;height:64px;border-radius:14px;background:#EEE center/cover}.titem .tx{flex:1}.titem .tx small{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink3)}.titem .tx b{font-size:15px;display:block;margin-top:4px}
+  .frrow{display:flex;align-items:center;gap:14px;padding:10px 0;text-align:left;width:100%}.frrow .wt{width:61px;height:61px;border-radius:50%;background:#F1EFEE center/cover;flex:none}.frrow .tx{flex:1}.frrow b{font-size:15px;display:block}.frrow small{font-size:11.6px;color:var(--ink3)}.frrow .bd{font-size:11.8px;font-weight:600;padding:5px 11px;border-radius:12px;background:#E3ECF1;color:#4D6676}.frrow .bd2{font-size:11.8px;color:var(--ink3)}
+  .myrow2{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);font-size:16px;text-align:left}.myrow2 b{font-size:16px;display:block}.myrow2 span.muted:not(:only-child),.myrow2 div span{font-size:13px}.myrow2 div span{display:block;margin-top:3px}
+  .cloud{position:absolute;border-radius:50%;filter:blur(7px);opacity:.92}
   #demo{display:flex;flex-direction:column;gap:2px}
   #demo button{padding:7px 12px;font-size:12.5px}
   .nav .seg{display:flex;gap:4px;flex-wrap:wrap}
@@ -293,39 +302,81 @@
       <nav class="tabbar pill hit" data-tabs></nav>
     </section>
 
-    <!-- 기억 -->
+    <!-- 기억 (Figma UI-03: 달력 · 전체 영상 · 코어 기억) -->
     <section class="scr" id="s-memory" style="background:var(--bg)">
-      <div class="top" style="height:44px"><div style="font-size:26px;font-weight:700;margin-top:10px">기억</div></div>
-      <div class="hit" style="position:absolute;left:0;right:0;top:112px;padding:0 20px;display:flex;gap:6px" id="memChips"></div>
-      <div class="hit" id="memGrid" style="position:absolute;left:0;right:0;top:158px;bottom:116px;overflow-y:auto;padding:4px 20px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start"></div>
+      <div class="top" style="height:96px"><div style="font-size:24px;font-weight:700;margin-top:8px">기억</div>
+        <div class="seg3 hit" id="memSeg" style="margin-top:12px"><button data-m="all">전체 영상</button><button data-m="cal" class="on">달력</button><button data-m="core">코어 기억</button></div></div>
+      <div class="mview hit" id="mv-cal">
+        <div class="row" style="justify-content:space-between;margin:2px 4px 14px"><span style="color:var(--ink3)">‹</span><b style="font-size:17px">2026년 5월</b><span style="color:var(--ink3)">›</span></div>
+        <div class="cal" id="calWeek"></div><div class="cal" id="calGrid"></div>
+        <div class="row" style="justify-content:space-between;margin:16px 2px 10px"><b style="font-size:15px" id="calLab">5월 12일 · 세포 3개</b><button class="hit" id="calAll" style="font-size:13px;color:var(--ink2);font-weight:600">전체 보기 ›</button></div>
+        <div class="row" style="gap:8px" id="calPics"></div>
+      </div>
+      <div class="mview hit" id="mv-all" style="display:none">
+        <div class="row" style="gap:6px;margin-bottom:12px" id="memChips"></div>
+        <b style="font-size:15px;display:block;margin:0 0 10px">5월</b>
+        <div id="memGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
+      </div>
+      <div class="mview hit" id="mv-core" style="display:none">
+        <div id="coreCloud" style="position:relative;height:190px;margin:4px 0 10px"></div>
+        <div id="coreList"></div>
+      </div>
       <nav class="tabbar pill hit" data-tabs></nav>
     </section>
 
-    <!-- 구경 -->
+    <!-- 날짜별 기억 (Figma UI-03 · 02) -->
+    <section class="scr" id="s-date" style="background:var(--bg)">
+      <button class="glassbtn hit" data-back style="position:absolute;left:16px;top:56px;z-index:6"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="top" style="height:44px"><div style="text-align:center;font-size:17px;font-weight:700;margin-top:18px">5월 12일</div></div>
+      <div class="hit" style="position:absolute;left:0;right:0;top:118px;bottom:0;overflow-y:auto;padding:0 20px 120px">
+        <div class="card" style="position:relative;left:0;right:0;padding:14px 16px;border-radius:18px;margin-bottom:16px"><div class="muted" style="font-size:12px">그날의 새로움</div><div class="row" style="justify-content:space-between;margin-top:6px"><b style="font-size:15px">처음 가보는 시장 구경하기</b><span style="font-size:17px">✓</span></div></div>
+        <div id="dateList"></div>
+        <div class="muted" style="text-align:center;font-size:12px;margin-top:10px">세포를 누르면 기억 상세로 이동해요</div>
+      </div>
+    </section>
+
+    <!-- 친구 (Figma UI-04 · 01) -->
     <section class="scr" id="s-visit" style="background:var(--bg)">
-      <div class="top" style="height:44px"><div style="font-size:26px;font-weight:700;margin-top:10px">친구</div></div>
-      <div class="muted" style="position:absolute;left:20px;right:20px;top:112px;font-size:13px">링크로 초대받은 친구의 세계를 구경해요</div>
-      <div class="hit" id="visitList" style="position:absolute;left:0;right:0;top:146px;bottom:116px;overflow-y:auto;padding:4px 20px 20px;display:flex;flex-direction:column;gap:12px"></div>
+      <div class="top" style="height:44px"><div class="row" style="justify-content:space-between;margin-top:8px"><div style="font-size:26px;font-weight:700">친구</div><button class="chip hit" id="addFr" style="height:28px;font-size:12px;font-weight:600">+ 친구 추가</button></div></div>
+      <div class="hit" style="position:absolute;left:0;right:0;top:112px;bottom:116px;overflow-y:auto;padding:4px 20px 20px">
+        <button class="vcard hit" id="weekVisit" style="width:100%;flex-direction:column;align-items:flex-start;gap:3px;padding:14px 16px"><b style="font-size:13px">이번 주 내 세계에 6명이 다녀갔어요</b><span class="muted" style="font-size:12px">엄마, 지수 외 4명 ›</span></button>
+        <div class="muted" style="font-size:12px;font-weight:600;margin:20px 0 8px">친구</div>
+        <div id="frList"></div>
+        <div class="muted" style="font-size:12px;font-weight:600;margin:20px 0 8px">가족</div>
+        <div id="famList"></div>
+      </div>
       <nav class="tabbar pill hit" data-tabs></nav>
+    </section>
+
+    <!-- 친구의 세계 (Figma UI-04 · 02) -->
+    <section class="scr" id="s-friend">
+      <button class="glassbtn hit" data-back style="position:absolute;left:16px;top:56px;z-index:6"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="top" style="height:46px"><div style="text-align:center;font-size:17px;font-weight:700;margin-top:10px">지수의 세계</div><div class="muted" style="text-align:center;font-size:12px;margin-top:2px">뉴욕 · D+120 · 세포 86</div></div>
+      <button class="pill hit row" id="frNew" style="position:absolute;z-index:2;left:20px;top:520px;height:44px;border-radius:22px;padding:0 14px 0 8px;gap:10px"><i class="orbc" style="width:20px;height:20px"></i><span style="text-align:left"><b style="font-size:13px;display:block">지수가 새 세포 4개를 피웠어요</b><span class="muted" style="font-size:11px">이슬은 · 카페 · 꽃집</span></span><svg width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div style="position:absolute;left:0;right:0;top:586px;bottom:0;background:var(--card)"></div>
+      <div style="position:absolute;left:20px;right:20px;top:600px"><b style="font-size:14px">지수가 최근 피워 낸 세포</b>
+        <div class="row" style="gap:12px;margin-top:14px"><i class="orbc" style="width:26px;height:26px"></i><b style="font-size:14px;flex:1">센트럴파크 첫 피크닉</b><span class="muted" style="font-size:12px">어제</span></div>
+        <div class="row" style="gap:12px;margin-top:18px"><i class="orbc" style="width:26px;height:26px;--o1:#c5c79b;--o3:#fcd96b"></i><b style="font-size:14px;flex:1">브루클린 작은 서점</b><span class="muted" style="font-size:12px">3일 전</span></div></div>
+      <button class="cta hit" id="frGuest" style="top:716px;right:78px">방명록 남기기</button>
+      <button class="glassbtn hit" style="position:absolute;right:20px;top:716px;width:50px;height:50px;border-radius:25px;background:var(--card);box-shadow:inset 0 0 0 1px #DDD9D5" id="frHeart"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
     </section>
 
     <!-- 마이 -->
-    <section class="scr" id="s-my" style="background:var(--bg2,var(--bg))">
-      <div class="top" style="height:44px"><div style="font-size:26px;font-weight:700;margin-top:10px">마이</div></div>
-      <div class="card" style="top:112px;height:92px;padding:0 20px;display:flex;align-items:center;gap:14px">
-        <span class="av" style="width:52px;height:52px;font-size:18px;background:#F9D3D0;box-shadow:none">나</span>
-        <span style="flex:1"><b style="font-size:17px;display:block">하린</b><span class="muted" style="font-size:12px" id="mySub">런던 · D+47 · 세포 32</span></span>
-        <span class="chip"><i class="dot"></i>노드 연결됨</span>
-      </div>
-      <button class="card hit row" id="myDone" style="top:220px;height:72px;padding:0 18px 0 16px;gap:12px;text-align:left">
-        <span style="flex:1"><b style="font-size:15px;display:block">완성된 세계 보기</b><span class="muted" style="font-size:12px">귀국 후 · 런던에서의 382일</span></span>
-        <svg width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-      </button>
-      <div class="card" style="top:308px;height:210px;padding:6px 18px">
-        <div class="row myrow"><span>함께 보는 사람</span><span class="muted">엄마 · 지수 · 아린</span></div>
-        <div class="row myrow"><span>노마드</span><span class="muted">연결됨 · 배터리 82%</span></div>
-        <div class="row myrow"><span>알림</span><span class="muted">새 세포 · 방문</span></div>
-        <div class="row myrow" style="border:0"><span>세계 설정</span><span class="muted">런던 · 여름</span></div>
+    <section class="scr" id="s-my" style="background:var(--bg)">
+      <div class="top" style="height:90px"><div class="row" style="justify-content:space-between;margin-top:8px"><div style="font-size:28px;font-weight:700">하린</div><span class="muted" style="font-size:14px">편집</span></div><div class="muted" style="font-size:14px;margin-top:6px">런던에서 교환학생으로 지내는 중</div></div>
+      <div class="hit" style="position:absolute;left:0;right:0;top:150px;bottom:116px;overflow-y:auto;padding:4px 20px 20px">
+        <div class="card" style="position:relative;left:0;right:0;border-radius:20px;padding:18px;background:var(--bg2,#F6F4F2)">
+          <div class="row" style="justify-content:space-between"><div><b style="font-size:22px">47일째</b> <span class="muted" style="font-size:13px;margin-left:6px">180일 중</span></div><b style="font-size:11px;color:var(--coral)">PHASE 01</b></div>
+          <div style="height:6px;border-radius:3px;background:#E6E2DE;margin:14px 0 10px"><i style="display:block;width:26%;height:100%;border-radius:3px;background:var(--coral)"></i></div>
+          <div class="row muted" style="justify-content:space-between;font-size:12px"><span>3월 2일 런던 도착</span><span>8월 28일 서울로</span></div></div>
+        <div class="muted" style="font-size:13px;font-weight:600;margin:22px 0 4px">기기</div>
+        <div class="myrow2"><div><b>노마드</b><span class="muted">가방에 달려 있어요</span></div><span class="muted">배터리 82%</span></div>
+        <div class="myrow2"><div><b>노드</b><span class="muted">책상 위에서 세포 128개 보관 중</span></div><span class="muted">연결됨</span></div>
+        <div class="muted" style="font-size:13px;font-weight:600;margin:22px 0 4px">설정</div>
+        <button class="myrow2 hit" id="myDone" style="width:100%"><div><b style="font-weight:400">남길 것과 흘려보낼 것</b></div><span class="muted">›</span></button>
+        <div class="myrow2"><b style="font-weight:400">음악 앱</b><span class="muted">Spotify ›</span></div>
+        <div class="myrow2"><b style="font-weight:400">알림</b><span class="muted">하루 한 번 ›</span></div>
+        <div class="myrow2"><b style="font-weight:400">데이터와 개인정보</b><span class="muted">›</span></div>
       </div>
       <nav class="tabbar pill hit" data-tabs></nav>
     </section>
@@ -396,7 +447,7 @@ const W=()=>frame.contentWindow&&frame.contentWindow.__api;
 let ready=false;
 const whenReady=()=>new Promise(r=>{const t=setInterval(()=>{const w=frame.contentWindow;if(w&&w.__api&&w.__ready){clearInterval(t);r();}},120);});
 // 화면별 월드 영역 + 카메라
-const VIEWS={home:{top:128,h:472,vh:11.3},explore:{top:130,h:510,vh:13.5,fz:1.45},day:{top:110,h:400,vh:11.5,fz:1.2},done:{top:96,h:400,vh:18,fz:1},full:{top:128,h:472,vh:12.5}};
+const VIEWS={home:{top:128,h:472,vh:11.3},explore:{top:130,h:510,vh:13.5,fz:1.45},day:{top:110,h:400,vh:11.5,fz:1.2},friend:{top:96,h:440,vh:13},done:{top:96,h:400,vh:18,fz:1},full:{top:128,h:472,vh:12.5}};
 function setView(k){const v=VIEWS[k];const T=v.top,H=v.h+T;wrap.style.top='0px';wrap.style.height=H+'px';
   // 월드가 화면에서 놓이는 자리와 크기는 그대로 두고, 위쪽(탑바 뒤)까지 월드를 채움
   if(W())W().view({vh:v.vh*H/v.h,fz:v.fz||1.3,ty:.9+(T/2)/(v.h/v.vh)/.816*(+(window.TYK||1))});}
@@ -408,14 +459,15 @@ function show(id,push=true){
   $$('.scr').forEach(s=>s.classList.toggle('on',s.id==='s-'+id));
   $$('#nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===id||(id==='day'&&followIdx>=0&&b.dataset.go==='follow')));
   wrap.classList.toggle('wrap-nochip',!(id==='home'||id==='done'));$('#envPop').style.display='none';
-  setView(id==='explore'?'explore':id==='day'?'day':id==='done'?'done':'home');
+  setView(id==='explore'?'explore':id==='day'?'day':id==='done'?'done':id==='friend'?'friend':'home');
   $('#exTag').style.opacity=0;$('#route').innerHTML='';
   if(id!=='explore'&&id!=='day'&&W())W().focus(null);
   if(id==='home'){$('#pins').style.opacity=1;}else $('#pins').style.opacity=0;
-  $$('[data-tabs]').forEach(n=>[...n.children].forEach((b,i)=>b.classList.toggle('on',i===(id==='home'?0:id==='memory'?1:id==='visit'?2:(id==='my'||id==='done')?3:-1))));
-  if(id==='my'||id==='memory'||id==='visit'){wrap.style.opacity=0;wrap.style.pointerEvents='none';}else{wrap.style.opacity='';wrap.style.pointerEvents='';}
+  $$('[data-tabs]').forEach(n=>[...n.children].forEach((b,i)=>b.classList.toggle('on',i===(id==='home'?0:(id==='memory'||id==='date')?1:(id==='visit'||id==='friend')?2:(id==='my'||id==='done')?3:-1))));
+  if(id==='my'||id==='memory'||id==='visit'||id==='date'){wrap.style.opacity=0;wrap.style.pointerEvents='none';}else{wrap.style.opacity='';wrap.style.pointerEvents='';}
   if(id==='day')renderDay();
   if(id==='done'){countUp();}
+  {const wc=id==='friend'?'newyork':'london';if(W()&&W().cityNow!==wc&&(id==='friend'||W().cityNow==='newyork')){W().cityNow=wc;W().env({city:wc});}}
   if(W()){if(id==='done')setTimeout(()=>{if(cur==='done'){W().grand(true);setTimeout(()=>dlabels(true),900);}},350);else{W().grand(false);dlabels(false);}}
 }
 function back(){if(followIdx>=0){followIdx=-1;}const p=stack.pop()||'home';show(p,false);}
@@ -637,18 +689,50 @@ function fit(){const s=Math.min(1,(innerWidth-(innerWidth>760?300:20))/393);$('#
 addEventListener('resize',fit);fit();
 
 
-/* ---------- 기억 · 구경 탭 ---------- */
-const MEM=[['bagel','음식'],['school','공부'],['landmark','산책'],['cat','동물'],['canal','산책'],['home','집']];
+/* ---------- 기억 · 친구 탭 (Figma UI-03 · UI-04) ---------- */
+const IMG={bagel:'proto/img/bagel-still.jpg',cat:'proto/img/cat-still.jpg',home:'proto/img/home-still.jpg',school:'proto/img/school-still.jpg',canal:'proto/img/canal-still.jpg',landmark:'proto/img/landmark-still.jpg'};
+const ORB=(c1,c2,c3)=>`<i class="orbc" style="--o1:${c1};--o2:${c2};--o3:${c3}"></i>`;
+// 달력
+$('#calWeek').innerHTML=['일','월','화','수','목','금','토'].map(d=>`<div class="d hd">${d}</div>`).join('');
+const CALM={4:['#c19490','#8fb5cb','#f27355'],5:['#c5c79b','#8fb5cb','#fcd96b'],6:['#c19490','#f27355','#8fb5cb'],9:['#c19490','#8fb5cb','#f27355'],12:['#c19490','#f27355','#8fb5cb'],13:['#c5c79b','#8fb5cb','#fcd96b'],16:['#c5c79b','#8fb5cb','#fcd96b'],18:['#c19490','#f27355','#8fb5cb'],23:['#c19490','#f27355','#8fb5cb'],24:['#c5c79b','#fcd96b','#8fb5cb'],25:['#c19490','#f27355','#8fb5cb'],26:['#c19490','#f27355','#8fb5cb'],28:['#c5c79b','#8fb5cb','#fcd96b']};
+let calSel=12;
+function renderCal(){let h='';for(let i=0;i<5;i++)h+='<div class="d"></div>';
+  for(let d=1;d<=30;d++){const m=CALM[d];h+=`<button class="d hit${d===calSel?' sel':''}" data-d="${d}">${m?`<i class="orbc" style="--o1:${m[0]};--o2:${m[1]};--o3:${m[2]}"></i>`:'<i style="visibility:hidden"></i>'}${d}</button>`;}
+  $('#calGrid').innerHTML=h;
+  $$('#calGrid .d[data-d]').forEach(b=>b.onclick=()=>{const d=+b.dataset.d;if(d===calSel&&CALM[d]){show('date');return;}calSel=d;renderCal();updCal();});}
+function updCal(){const n=CALM[calSel]?3:0;$('#calLab').textContent=`5월 ${calSel}일 · 세포 ${n}개`;
+  $('#calPics').innerHTML=n?['bagel','landmark','school'].map(k=>`<button class="mpic hit" data-k="${k}" style="background-image:url(${IMG[k]})"></button>`).join(''):'<div class="muted" style="font-size:13px;padding:8px 2px">이날은 기록한 세포가 없어요</div>';
+  $$('#calPics .mpic').forEach(b=>b.onclick=()=>openCell(b.dataset.k,b));}
+renderCal();updCal();
+$('#calAll').onclick=()=>show('date');
+// 날짜별 기억
+const DATEI=[['10:24','행동','#F27355','처음 타 본 트램','landmark','landmark'],['13:05','친구','#8FB5CB','같은 반 친구와 점심','school','school'],['15:12','장소','#BDCB8F','처음 간 시장','canal','canal'],['15:40','음식','#F7A25E','처음 먹어 본 과일','bagel','bagel']];
+$('#dateList').innerHTML=DATEI.map(([t,c,col,n,im,k])=>`<button class="titem hit" data-k="${k}" style="width:100%;text-align:left"><span class="tm">${t}</span><span class="th" style="background-image:url(${IMG[im]})"></span><span class="tx"><small><i style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></i>${c}</small><b>${n}</b></span><span class="muted">›</span></button>`).join('');
+$$('#dateList .titem').forEach(b=>b.onclick=()=>openCell(b.dataset.k,b));
+// 전체 영상
+const GIMGS=[['landmark','5.12'],['canal','5.11'],['bagel','5.10'],['cat','5.9'],['school','5.8'],['home','5.7'],['bagel','5.6'],['landmark','5.5'],['canal','5.4']];
 let memF='전체';
-function renderMem(){const g=$('#memGrid');g.innerHTML=MEM.filter(m=>memF==='전체'||m[1]===memF).map(([k])=>{const c=CELLS[k];return `<button class="mcard hit" data-k="${k}"><div class="im" style="background-image:url(${c.img})"></div><div class="tx"><b>${c.title}</b><span>${c.meta.split(' · ')[0]}</span></div></button>`}).join('');
-  $$('#memGrid .mcard').forEach(b=>b.onclick=()=>openCell(b.dataset.k,b));}
-$('#memChips').innerHTML=['전체','음식','공부','산책','동물','집'].map(t=>`<button class="fchip hit${t==='전체'?' on':''}">${t}</button>`).join('');
-$$('#memChips .fchip').forEach(b=>b.onclick=()=>{memF=b.textContent;$$('#memChips .fchip').forEach(x=>x.classList.toggle('on',x===b));renderMem();});
+function renderMem(){$('#memGrid').innerHTML=GIMGS.map(([k,d],i)=>`<button class="gimg hit" data-k="${k}" data-d="${d}" style="background-image:url(${IMG[k]})"></button>`).join('');
+  $$('#memGrid .gimg').forEach(b=>b.onclick=()=>openCell(b.dataset.k,b));}
+$('#memChips').innerHTML=[['전체',''],['친구','#F27355'],['음식','#F7A25E'],['장소','#8FB5CB']].map(([t,c],i)=>`<button class="fchip hit${i?'':' on'}">${c?`<i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c};margin-right:5px"></i>`:''}${t}</button>`).join('');
+$$('#memChips .fchip').forEach(b=>b.onclick=()=>{$$('#memChips .fchip').forEach(x=>x.classList.toggle('on',x===b));renderMem();});
 renderMem();
-const FRIENDS=[['j','지수','뉴욕 · D+120 · 세포 86','최근 센트럴파크 첫 피크닉'],['m','엄마','서울 · D+310 · 세포 142','최근 시장 가는 길'],['a','아린','파리 · D+64 · 세포 51','최근 빵집 골목']];
-$('#visitList').innerHTML=FRIENDS.map(([c,n,s1,s2])=>`<button class="vcard hit" data-n="${n}"><span class="av ${c}" style="width:48px;height:48px;font-size:16px;box-shadow:none">${n[0]}</span><span style="flex:1"><b style="font-size:15px;display:block">${n}의 세계</b><span class="muted" style="font-size:12px;display:block;margin-top:2px">${s1}</span><span class="muted" style="font-size:12px">${s2}</span></span><svg width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>`).join('');
-$$('#visitList .vcard').forEach(b=>b.onclick=()=>toast(b.dataset.n+'의 세계는 링크로 초대받으면 열려요'));
-
+// 코어 기억
+$('#coreCloud').innerHTML=[[170,30,44,'#F2A4A4'],[90,70,60,'#FCD96B'],[200,90,50,'#F27355'],[120,110,38,'#8FB5CB'],[40,60,26,'#BDCB8F'],[260,55,22,'#8FB5CB'],[290,120,20,'#FCD96B']].map(([x,y,r,c])=>`<i class="cloud" style="left:${x}px;top:${y}px;width:${r*1.4}px;height:${r*1.4}px;background:${c}"></i>`).join('')
+ +[['친구',250,64],['음식',210,36],['장소',255,110],['행동',34,30]].map(([t,x,y])=>`<span style="position:absolute;left:${x}px;top:${y}px;font-size:12px;font-weight:700">${t}</span>`).join('');
+$('#coreList').innerHTML=[['처음 간 시장','5.12 · "다시 가고 싶다" · 아이디어 6','canal'],['가속사 첫 치내','3.20 · 아이디어 기억 4','landmark'],['첫 수업 발표','4.02 · 아이디어 기억 3','school']].map(([t,s,k])=>`<button class="hit row" data-k="${k}" style="width:100%;text-align:left;gap:10px;padding:14px 0"><span style="color:#F2A4A4;font-size:15px">★</span><span style="flex:1"><b style="font-size:14px;display:block">${t}</b><span class="muted" style="font-size:11.5px">${s}</span></span><span class="muted">›</span></button>`).join('');
+$$('#coreList [data-k]').forEach(b=>b.onclick=()=>openCell(b.dataset.k,b));
+// 기억 세그먼트
+$$('#memSeg button').forEach(b=>b.onclick=()=>{const m=b.dataset.m;$$('#memSeg button').forEach(x=>x.classList.toggle('on',x===b));['cal','all','core'].forEach(k=>$('#mv-'+k).style.display=k===m?'':'none');});
+// 친구 목록
+const WTH='radial-gradient(circle at 50% 55%,#BDCB8F 0 38%,#F2A4A4 39% 52%,#F1EFEE 53%)';
+$('#frList').innerHTML=[['지수','뉴욕 · D+120 · 세포 86','새 세포 4',1],['민호','베를린 · D+15 · 세포 9','새 세포 1',0]].map(([n,s,b,go])=>`<button class="frrow hit" data-fr="${go?'jisu':''}"><span class="wt" style="background:${WTH}"></span><span class="tx"><b>${n}</b><small>${s}</small></span><span class="bd">${b}</span></button>`).join('');
+$('#famList').innerHTML=[['엄','엄마','오늘 다녀감','#F9D3D0','#7A4F4F'],['아','아빠','어제 다녀감','#E3ECF1','#4D6676']].map(([i,n,w,bg,fg])=>`<div class="frrow"><span class="av" style="width:44px;height:44px;font-size:15px;background:${bg};color:${fg};box-shadow:none">${i}</span><span class="tx"><b>${n}</b><small>서울 · 기기 없이 앱으로 구경해요</small></span><span class="bd2">${w}</span></div>`).join('');
+$$('#frList .frrow[data-fr="jisu"]').forEach(b=>b.onclick=()=>show('friend'));
+$('#addFr').onclick=()=>toast('링크를 보내 친구를 초대해요');
+$('#weekVisit').onclick=()=>toast('엄마 · 지수 · 아린 외 3명이 다녀갔어요');
+$('#frGuest').onclick=()=>toast('방명록에 한마디를 남겼어요');$('#frHeart').onclick=()=>toast('지수의 세계에 좋아요를 눌렀어요');
+$('#frNew').onclick=()=>toast('지수가 새 세포 4개를 피웠어요');
 
 let _dl=null;
 function dlabels(on){clearInterval(_dl);const box=$('#dLabels');
