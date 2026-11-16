@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Nostos Prototype</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root{
+    --ink:#1F1B19;--ink2:#58524D;--ink3:#8C857F;--line:#ECEAE7;--bg:#FFFFFF;--world:#F4F4F7;--edge:#FFFFFF;
+    --coral:#F27355;--peach:#F7A25E;--pink:#F2A4A4;--yellow:#FCD96B;--sage:#BDCB8F;--blue:#8FB5CB;
+    --glass:rgba(255,255,255,.72);--glassBd:rgba(255,255,255,.95);--card:#fff;--field:#F4F3F1;--tabOn:rgba(0,0,0,.07);--bg2:#FFF8F4;
+    --shadow:0 6px 24px rgba(40,30,30,.08),0 1px 3px rgba(40,30,30,.06);
+  }
+  .phone.night{--bg:#1C1B1F;--card:#27262B;--ink:#F5F4F2;--ink2:#CFCAC5;--ink3:#8F8984;--world:#2A2830;--edge:#1C1B1F;--glass:rgba(52,50,58,.66);--glassBd:rgba(255,255,255,.10);--field:#323138;--tabOn:rgba(255,255,255,.12);--bg2:#231F26;color:var(--ink)}
+  .phone{color:var(--ink);transition:background .5s,color .5s}
+  .phone.night .card{box-shadow:0 8px 30px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.06)!important}
+  .phone.night .chip,.phone.night .cta.ghost{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .phone.night .badge{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(242,115,85,.45)}
+  .phone.night .handle{background:rgba(255,255,255,.18)}
+  /* 밤: 아바타(엄·지·아)와 한마디 말풍선 */
+  .phone.night .av{box-shadow:0 0 0 2px var(--card)}
+  .phone.night .av.m{background:#5B3E3F;color:#F9D3D0}
+  .phone.night .av.j{background:#33495A;color:#D6E4EE}
+  .phone.night .av.a{background:#3B4954;color:#E3ECF1}
+  .phone.night .pin .av{box-shadow:0 0 0 3px #1C1B1F,0 0 0 4px rgba(255,255,255,.28),0 4px 14px rgba(0,0,0,.45)}
+  .phone.night .pin .lb{background:rgba(28,27,31,.82);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+  .phone.night .bub{background:rgba(32,30,36,.62);color:#F5F4F2;box-shadow:0 6px 20px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.12)}
+  .phone .top,.phone .card,.phone .sheet,.phone .full{transition:background .5s}
+  .status,.glassbtn,.homebar{color:var(--ink)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:#E7E5EA;font-family:"Pretendard",-apple-system,sans-serif;color:var(--ink);overflow:hidden}
+  button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+  .stage{height:100%;display:flex;align-items:center;justify-content:center;gap:40px}
+  /* 왼쪽 화면 목록 (데스크톱) */
+  .nav{width:220px;display:flex;flex-direction:column;gap:4px}
+  .nav h1{font-size:15px;margin:0 0 4px}
+  .nav p{font-size:12px;color:var(--ink3);margin:0 0 14px;line-height:1.5}
+  .nav button{text-align:left;padding:9px 12px;border-radius:10px;font-size:13px;color:var(--ink2)}
+  .nav button:hover{background:rgba(255,255,255,.6)}
+  .nav button.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+  .nav .sep{height:1px;background:rgba(0,0,0,.07);margin:10px 0}
+  #demo{display:flex;flex-direction:column;gap:2px}
+  #demo button{padding:7px 12px;font-size:12.5px}
+  .nav .seg{display:flex;gap:4px;flex-wrap:wrap}
+  .nav .seg button{padding:6px 10px;font-size:12px;background:rgba(255,255,255,.5)}
+  .nav .seg button.on{background:var(--ink);color:#fff}
+  @media (max-width:760px){.nav{display:none}.stage{gap:0}}
+  /* 폰 */
+  .phone{position:relative;width:393px;height:852px;border-radius:54px;background:var(--bg);overflow:hidden;box-shadow:0 30px 80px rgba(30,20,40,.18),0 0 0 10px #1d1b1c,0 0 0 11px #3a3638;flex:none}
+  @media (max-width:760px),(max-height:880px){.phone{transform:scale(var(--fit,1));transform-origin:center}}
+  @media (max-width:430px){.phone{width:100vw;height:100dvh;border-radius:0;box-shadow:none;transform:none}}
+  .status{position:absolute;left:0;right:0;top:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 42px;font-weight:600;font-size:16px;z-index:60;pointer-events:none}
+  .status svg{height:12px}
+  .homebar{position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:currentColor;z-index:70;pointer-events:none}
+  /* 월드 */
+  #worldWrap{position:absolute;left:0;right:0;top:128px;height:472px;background:linear-gradient(var(--world) 0,var(--world) 82%,var(--edge) 100%);transition:top .55s cubic-bezier(.3,.8,.3,1),height .55s cubic-bezier(.3,.8,.3,1),background .4s;z-index:1}
+  #world{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+  #pins,#route{position:absolute;inset:0;pointer-events:none}
+  /* 화면 */
+  .scr{position:absolute;inset:0;z-index:10;pointer-events:none;opacity:0;transition:opacity .35s}
+  .scr.on{opacity:1}
+  .scr.on .hit{pointer-events:auto}
+  .top{position:absolute;left:0;right:0;top:54px;padding:0 20px;background:none}
+  /* 탑바: 경계 없는 점진적 그라데이션 (위는 불투명 → 아래로 갈수록 자연스럽게 투명, 블러도 같이 약해짐) */
+  .top::before{content:'';position:absolute;left:0;right:0;top:-54px;bottom:-46px;background:linear-gradient(rgba(255,255,255,.94) 0%,rgba(255,255,255,.86) 38%,rgba(255,255,255,.5) 68%,rgba(255,255,255,0) 100%);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(#000 0%,#000 46%,transparent 100%);mask-image:linear-gradient(#000 0%,#000 46%,transparent 100%);z-index:-1;pointer-events:none}
+  .phone.night .top::before{background:linear-gradient(rgba(28,27,31,.94) 0%,rgba(28,27,31,.86) 38%,rgba(28,27,31,.5) 68%,rgba(28,27,31,0) 100%)}
+  .glassbtn{width:44px;height:44px;border-radius:50%;background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow),inset 0 0 0 1px var(--glassBd);display:grid;place-items:center}
+  .chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:15px;background:var(--card);box-shadow:inset 0 0 0 1px #E2DFDB;font-size:13px;color:var(--ink2)}
+  .dot{width:8px;height:8px;border-radius:50%;background:#7FA14A}
+  .pill{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow),inset 0 0 0 1px var(--glassBd)}
+  .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#7A4F4F;box-shadow:0 0 0 2px #fff}
+  .av.m{background:#F9D3D0}.av.j{background:#D6E4EE;color:#4D6676}.av.a{background:#E3ECF1;color:#4D6676}
+  .avs{display:flex}.avs .av+.av{margin-left:-7px}
+  #envPop button{flex:1;height:32px;border-radius:16px;font-size:12px;color:var(--ink2);background:var(--tabOn)}
+  #envPop button.on{background:var(--ink);color:var(--bg);font-weight:600}
+  #envChip,#envPop{display:none!important}
+  .wrap-nochip #envChip,.wrap-nochip #envPop{display:none!important}
+  .card{position:absolute;left:20px;right:20px;border-radius:24px;background:var(--card);box-shadow:0 8px 30px rgba(40,30,30,.07),inset 0 0 0 1px #F0EEEC}
+  .tabbar{position:absolute;left:20px;right:20px;bottom:40px;height:62px;border-radius:31px;display:flex;align-items:center;padding:6px;gap:2px}
+  .tab{flex:1;height:50px;border-radius:25px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;color:var(--ink2)}
+  .tab.on{background:var(--tabOn);color:var(--ink);font-weight:600}
+  .tab svg{width:21px;height:21px}
+  .cta{position:absolute;left:20px;right:20px;height:50px;border-radius:25px;background:var(--ink);color:var(--bg);font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .cta.grad{background:linear-gradient(100deg,var(--coral),var(--peach));box-shadow:0 10px 24px rgba(242,115,85,.3)}
+  .cta.ghost{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px #DDD9D5}
+  .cta:active,.hit:active{transform:scale(.97)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:28px 28px 0 0;box-shadow:0 -10px 40px rgba(40,30,30,.08);transition:transform .45s cubic-bezier(.3,.9,.3,1)}
+  .handle{width:36px;height:4px;border-radius:2px;background:#E2DFDB;margin:12px auto 0}
+  .muted{color:var(--ink3)}
+  .h1{font-size:30px;font-weight:700;letter-spacing:-.5px}
+  .row{display:flex;align-items:center}
+  /* 핀 */
+  .pin{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0;transition:opacity .4s, transform .4s;pointer-events:auto}
+  .pin.show{opacity:1}
+  .pin .av{width:30px;height:30px;font-size:12px;box-shadow:0 0 0 3px #fff,0 4px 12px rgba(0,0,0,.12)}
+  .pin .lb{font-size:10px;color:#fff;background:rgba(35,31,29,.8);padding:3px 7px;border-radius:9px;white-space:nowrap}
+  .tag{position:absolute;transform:translate(-50%,-115%);background:#2B2622;color:#fff;border-radius:22px;padding:9px 15px;font-size:15px;font-weight:600;white-space:nowrap;transition:opacity .3s;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+  .tag small{display:block;font-size:11px;font-weight:500;opacity:.85;margin-top:2px}
+  .phone.night .tag{background:rgba(245,244,242,.94);color:#1C1B1F}
+  /* 알림 배너 */
+  #banner{position:absolute;left:12px;right:12px;top:62px;height:66px;border-radius:22px;z-index:50;display:flex;align-items:center;gap:12px;padding:0 16px;transform:translateY(-220%);transition:transform .55s cubic-bezier(.3,1.2,.4,1);pointer-events:auto;cursor:pointer}
+  #banner.show{transform:none}
+  #banner .ic{width:40px;height:40px;border-radius:50%;background:url(proto/img/t-cat.jpg) center/cover,var(--blue)}
+  /* 토스트 */
+  #toast{position:absolute;left:50%;bottom:120px;transform:translate(-50%,20px);background:rgba(35,31,29,.88);color:#fff;font-size:13px;padding:10px 16px;border-radius:18px;opacity:0;transition:.3s;z-index:80;white-space:nowrap;pointer-events:none}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  /* 오버레이 화면 (기억 세포 / 새 세포) */
+  .full{position:absolute;inset:0;background:var(--card);z-index:30;transform:translateY(100%);transition:transform .5s cubic-bezier(.3,.9,.3,1);overflow:hidden}
+  .full.on{transform:none}
+  /* 버튼에서 펼쳐지는 전환: 누른 버튼 자리에서 시작한 둥근 사각형이 화면 전체로 커짐 */
+  .full.morph{--t:780px;--l:20px;--r:20px;--b:22px;--rad:25px;transform:none;clip-path:inset(var(--t) var(--r) var(--b) var(--l) round var(--rad));opacity:0;pointer-events:none;transition:clip-path .55s cubic-bezier(.5,0,.2,1),opacity .1s .45s}
+  .full.morph.on{clip-path:inset(0 0 0 0 round 0px);opacity:1;pointer-events:auto;transition:clip-path .68s cubic-bezier(.22,1,.36,1),opacity .01s}
+  .full.morph > *:not(.reply){opacity:0;transform:translateY(18px);transition:opacity .2s,transform .2s}
+  .full.morph.on > *:not(.reply){opacity:1;transform:none;transition:opacity .5s .34s,transform .6s .34s cubic-bezier(.22,1,.36,1)}
+  .full.morph.on > .hero{transition:opacity .35s .12s,transform .6s .1s cubic-bezier(.22,1,.36,1)}
+  #s-explore{transition:opacity .35s,transform .6s cubic-bezier(.22,1,.36,1),filter .6s}
+  #s-explore.sink{transform:scale(.955) translateY(-6px);filter:brightness(.92)}
+  .hero{position:absolute;left:0;right:0;top:0;height:580px;overflow:hidden;clip-path:ellipse(120% 100% at 50% 0%)}
+  .hero img{width:100%;height:100%;object-fit:cover;transform:scale(1.08);animation:kb 9s ease-out forwards}
+  @keyframes kb{to{transform:scale(1.0)}}
+  .bub{position:absolute;right:20px;display:flex;align-items:center;gap:8px;padding:8px 14px 8px 8px;border-radius:20px;font-size:13px;background:rgba(255,255,255,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow);cursor:pointer;animation:up .5s both}
+  @keyframes up{from{opacity:0;transform:translateY(10px)}}
+  .bub b{font-weight:700}
+  .prog{position:absolute;left:72px;right:72px;top:72px;display:flex;z-index:5}
+  .prog i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.45);overflow:hidden;box-shadow:0 0 4px rgba(0,0,0,.25)}
+  .prog i em{display:block;height:100%;width:0;background:#fff;transition:width .1s linear}
+  .ai{color:var(--coral);font-size:13px;font-weight:700}
+  /* 새 세포 */
+  .orb{position:absolute;left:50%;top:157px;width:236px;height:236px;margin-left:-118px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 6px #fff,0 0 60px 20px rgba(247,162,94,.25);transform:scale(.6);opacity:0;transition:transform .7s cubic-bezier(.3,1.4,.4,1) .15s,opacity .4s .15s}
+  .full.on .orb{transform:none;opacity:1}
+  .orb img{width:100%;height:100%;object-fit:cover}
+  .orb video,.hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s}
+  .hasvid video{opacity:1}
+  .vui{position:absolute;inset:0;display:none;color:#fff;font-size:12px;text-shadow:0 1px 4px rgba(0,0,0,.45);background:linear-gradient(rgba(0,0,0,.32),rgba(0,0,0,0) 32%,rgba(0,0,0,0) 66%,rgba(0,0,0,.36))}
+  .hasvid .vui{display:block}
+  .vui .tl2{position:absolute;top:30px;left:0;right:0;text-align:center;opacity:.9}
+  .vui .bl{position:absolute;bottom:30px;left:0;right:0;text-align:center;font-weight:600}
+  .vplay{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;transition:opacity .3s}
+  .playing .vplay{opacity:0}
+  .ring{position:absolute;left:50%;top:151px;width:248px;height:248px;margin-left:-124px;pointer-events:none;transform:rotate(-90deg);opacity:0;transition:opacity .3s}
+  .hasvid~.ring{opacity:1}
+  .badge{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:14px;font-size:13px;color:var(--ink2);box-shadow:inset 0 0 0 1px #F2C9BD;background:#FFF7F3}
+  .badge i{width:12px;height:12px;border-radius:50%;background:conic-gradient(var(--pink),var(--yellow),var(--blue),var(--pink))}
+  /* 타임라인 */
+  .tl{position:relative;padding-left:48px;margin-top:6px}
+  .tl .it{position:relative;padding:12px 0 12px;transition:opacity .3s}
+  .tl .it .th{position:absolute;left:-48px;top:12px;width:36px;height:36px;border-radius:50%;background:#eee center/cover;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.1)}
+  .tl .it:not(:last-child)::after{content:"";position:absolute;left:-31px;top:50px;bottom:-12px;width:2px;background:#E8E5E2}
+  .tl .t{font-size:12px;color:var(--ink3)}
+  .tl .n{font-size:15px;font-weight:700;margin-top:2px}
+  .tl .d{font-size:12px;color:var(--ink3);margin-top:2px}
+  .tl.follow .it{opacity:.35}.tl.follow .it.cur{opacity:1}
+  .stat{font-size:17px;line-height:1.75;color:var(--ink2)}.stat b{color:var(--ink);font-size:19px}
+  .reply{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.1);padding:14px 20px 40px;transform:translateY(110%);transition:transform .4s cubic-bezier(.3,.9,.3,1);z-index:6}
+  .reply.on{transform:none}
+  .reply input{flex:1;height:44px;border-radius:22px;border:0;background:var(--field);color:var(--ink);padding:0 16px;font:inherit;font-size:14px;outline:none}
+  .send{width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;margin-left:8px}
+  .task-ic{width:44px;height:44px;border-radius:50%;border:1.5px dashed #9FB7C6;display:grid;place-items:center;transition:.3s}
+  .task.done .task-ic{border:0;background:var(--sage)}
+  .task.done .tt{text-decoration:line-through;color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="nav" id="nav">
+    <h1>Nostos · 메인 흐름</h1>
+    <p>폰 안을 직접 눌러 보세요. 월드는 드래그로 돌리고 건물을 누르면 확대돼요.<br>키: S 계절 · D 낮/밤 · N 새 세포 · W 노마드 걷기</p>
+    <button data-go="home">홈 · 나의 세계</button>
+    <button data-go="explore">세계 둘러보기</button>
+    <button data-go="cell">기억 세포</button>
+    <button data-go="newcell">새 세포가 피어남</button>
+    <button data-go="day">오늘의 하루</button>
+    <button data-go="follow">하루 따라가기</button>
+    <button data-go="done">귀국 후 · 완성된 세계</button>
+    <div class="sep"></div>
+    <p style="margin:0 0 6px">세계 설정</p>
+    <div class="seg" id="segCity"><button data-city="london" class="on">London</button><button data-city="seoul">Seoul</button><button data-city="newyork">New York</button><button data-city="paris">Paris</button></div>
+    <div class="seg" id="segSeason" style="margin-top:6px"><button data-season="spring">봄</button><button data-season="summer" class="on">여름</button><button data-season="autumn">가을</button><button data-season="winter">겨울</button></div>
+    <div class="seg" id="segTime" style="margin-top:6px"><button data-time="day" class="on">낮</button><button data-time="night">밤</button></div>
+    <div class="sep"></div>
+    <button data-go="notify">새 세포 알림 보내기 (N)</button>
+    <button data-go="walk">노마드 걷기 기록 완료 → 운하 (W)</button>
+    <button data-go="replay">처음부터 다시 (등장 + 알림)</button>
+    <div class="sep"></div>
+    <p style="margin:0 0 6px">시연 순서 <span style="opacity:.6">(Space / → 다음 · ← 이전)</span></p>
+    <div id="demo"></div>
+  </div>
+
+  <div class="phone" id="phone">
+    <div class="status"><span id="clock">9:41</span><svg viewBox="0 0 74 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="currentColor"/><rect x="5" y="5" width="3" height="7" rx="1" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/><path d="M27 4.5a9 9 0 0 1 12 0M29.5 7a5.4 5.4 0 0 1 7 0M32 9.6a1.6 1.6 0 0 1 2 0" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="47" y="1" width="23" height="10" rx="3" stroke="currentColor" fill="none"/><rect x="49" y="3" width="19" height="6" rx="1.5" fill="currentColor"/><rect x="71" y="4" width="2" height="4" rx="1" fill="currentColor"/></svg></div>
+
+    <div id="worldWrap"><iframe id="world" src="index.html?scene=hand&city=london&render=1&alpha=1"></iframe><canvas id="fx" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas><div id="route"></div><div id="pins"></div><button class="pill" id="envChip" style="position:absolute;left:16px;top:14px;height:34px;border-radius:17px;padding:0 12px 0 8px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;z-index:3;color:var(--ink)"><span id="envIc"></span><span id="envTx">여름 · 낮</span></button><div class="pill" id="envPop" style="position:absolute;left:16px;top:54px;border-radius:20px;padding:10px;z-index:4;display:none;width:236px"><div class="muted" style="font-size:11px;margin:0 4px 6px">계절</div><div style="display:flex;gap:4px" id="popSeason"></div><div class="muted" style="font-size:11px;margin:10px 4px 6px">시간</div><div style="display:flex;gap:4px" id="popTime"></div></div></div>
+
+    <!-- 홈 -->
+    <section class="scr" id="s-home">
+      <div class="top" style="height:74px">
+        <div class="row" style="justify-content:space-between;margin-top:10px"><div class="h1" id="dday">D+47</div><span class="chip hit"><i class="dot"></i>노드 연결됨</span></div>
+        <div class="muted" style="font-size:13px;margin-top:2px" id="homeSub">런던에서 자라는 나의 세계 · 4명과 함께 보는 중</div>
+      </div>
+      <button class="pill hit row" id="visitors" style="position:absolute;z-index:2;left:20px;top:556px;height:44px;border-radius:22px;padding:0 12px 0 8px;gap:10px">
+        <span class="avs"><span class="av m">엄</span><span class="av j">지</span><span class="av a">아</span></span>
+        <span style="text-align:left"><b style="font-size:13px;display:block">엄마 외 2명이 놀러 왔어요</b><span class="muted" style="font-size:11px">방금 · 베이글집에 한마디</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      <button class="hit row" id="spin" style="position:absolute;z-index:2;right:20px;top:570px;gap:4px;font-size:12px;color:var(--ink2)"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>돌려 보기</button>
+      <div style="position:absolute;left:0;right:0;top:600px;bottom:0;background:var(--card)"></div>
+      <button class="card hit row task" id="task" style="top:612px;height:66px;padding:0 18px 0 12px;gap:12px;text-align:left">
+        <span class="task-ic" id="taskIc"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z" fill="#8FB5CB"/></svg></span>
+        <span style="flex:1"><span class="muted" style="font-size:11px" id="taskLab">오늘의 작은 할 일 · 노마드가 기록해요</span><b class="tt" style="display:block;font-size:14px;margin-top:2px">운하길 20분 걷기</b></span>
+        <svg width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      <button class="hit row" id="toDay" style="position:absolute;left:20px;right:20px;top:704px;height:30px;justify-content:space-between">
+        <span class="row" style="gap:10px"><b style="font-size:14px">오늘 피어난 세포</b><span class="avs" style="filter:blur(.6px)"><i class="av" style="width:14px;height:14px;background:var(--pink)"></i><i class="av" style="width:14px;height:14px;background:var(--coral);margin-left:-4px"></i><i class="av" style="width:14px;height:14px;background:var(--yellow);margin-left:-4px"></i></span></span>
+        <span style="font-size:12px;color:var(--ink2)">하루 따라가기 ›</span>
+      </button>
+      <nav class="tabbar pill hit" data-tabs></nav>
+      <div id="taskDim" class="hit" style="position:absolute;inset:0;background:rgba(20,16,14,.28);opacity:0;pointer-events:none;transition:opacity .3s;z-index:19"></div>
+      <div class="sheet" id="taskSheet" style="height:344px;padding:0 20px;z-index:20;transform:translateY(110%);pointer-events:auto">
+        <div class="handle"></div>
+        <div class="muted" style="font-size:12px;margin-top:22px">오늘의 작은 할 일</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px">운하길 20분 걷기</div>
+        <div style="font-size:14px;line-height:1.6;color:var(--ink2);margin-top:10px">노마드를 들고 운하길을 20분 걸으면 노마드가 알아서 기록해요. 기록이 끝나면 내 세계에 운하가 생겨요.</div>
+        <div style="margin-top:18px;height:8px;border-radius:4px;background:#F0EEEC;overflow:hidden"><i id="taskBar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--sage));transition:width .1s"></i></div>
+        <div class="row muted" style="justify-content:space-between;font-size:12px;margin-top:8px"><span id="taskState">노마드 기록 대기 중</span><span id="taskMin">0 / 20분</span></div>
+        <button class="cta" id="taskClose" style="bottom:66px">확인</button>
+        <button id="taskDemo" style="position:absolute;left:0;right:0;bottom:34px;text-align:center;font-size:12px;color:var(--ink3);text-decoration:underline">(데모) 노마드로 20분 걷기 기록하기</button>
+      </div>
+    </section>
+
+    <!-- 세계 둘러보기 -->
+    <section class="scr" id="s-explore">
+      <div class="top" style="height:76px"><div class="row" style="justify-content:space-between;margin-top:6px"><button class="glassbtn hit" data-back><svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></button><b style="font-size:16px" id="exTitle">학교 동네</b><span class="chip" id="exChip">세포 24</span></div></div>
+      <div class="tag" id="exTag" style="opacity:0"></div>
+      <div class="sheet hit" style="height:252px;padding:0 20px">
+        <div class="handle"></div>
+        <div class="row" style="gap:16px;margin-top:22px">
+          <div style="width:62px;height:62px;border-radius:18px;background:var(--card);box-shadow:0 4px 14px rgba(0,0,0,.08);display:grid;place-items:center"><i id="exBlob" style="width:30px;height:30px;border-radius:50%;background:var(--blue);filter:blur(4px)"></i></div>
+          <div><b style="font-size:18px" id="exName">Bagel &amp; Co.</b><div class="muted" style="font-size:13px;margin-top:4px" id="exMeta">음식 · 학교 앞 · 3월 4일 처음</div><div style="font-size:13px;color:var(--ink2);margin-top:2px" id="exDesc">아침 수업 전에 혼자 들르던 곳</div></div>
+        </div>
+        <button class="cta" id="openCell" style="top:112px">기억 열어 보기</button>
+        <div class="muted" style="position:absolute;left:0;right:0;top:180px;text-align:center;font-size:12px">돌리고 확대해서 둘러보세요</div>
+      </div>
+    </section>
+
+    <!-- 오늘의 하루 / 하루 따라가기 -->
+    <section class="scr" id="s-day">
+      <div class="top" style="height:56px;text-align:center"><button class="glassbtn hit" data-back style="position:absolute;left:20px;top:2px"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></button><b style="font-size:16px;display:block;margin-top:6px">오늘의 하루</b><span class="muted" style="font-size:12px">10월 30일 · 세포 3</span></div>
+      <div class="sheet hit" id="daySheet" style="height:390px;padding:0 20px">
+        <div class="handle"></div>
+        <div class="row" style="justify-content:space-between;margin-top:20px"><b style="font-size:18px" id="dayTitle">오늘 다닌 길</b><span class="muted" style="font-size:13px" id="dayCount">3곳 · 세포 3</span></div>
+        <div class="tl" id="tl"></div>
+        <button class="cta" id="dayCta" style="bottom:40px"></button>
+      </div>
+    </section>
+
+    <!-- 귀국 후 -->
+    <section class="scr" id="s-done">
+      <div class="top" style="height:71px"><div class="muted" style="font-size:13px;margin-top:12px">세계가 완성됐어요</div><div style="font-size:26px;font-weight:700;margin-top:2px" id="doneTitle">런던에서의 382일</div></div>
+      <div style="position:absolute;left:0;right:0;top:462px;bottom:0;background:var(--card)"></div>
+      <div style="position:absolute;left:20px;right:20px;top:478px" class="stat">세포 <b data-n="248">0</b>개가 피어났어요<br>동네 <b data-n="6">0</b>곳이 생겼어요<br><b data-n="14">0</b>명이 다녀갔어요</div>
+      <div class="muted" style="position:absolute;left:20px;right:20px;top:574px;font-size:13px;line-height:1.6">이 세계는 노드와 앱에 그대로 남아,<br>언제든 다시 돌려 보며 그때로 돌아갈 수 있어요.</div>
+      <button class="cta hit" id="doneSpin" style="top:628px">세계 다시 둘러보기</button>
+      <button class="cta ghost hit" id="doneNext" style="top:686px;height:48px">서울에서 새 세계 시작하기</button>
+      <nav class="tabbar pill hit" data-tabs style="bottom:24px"></nav>
+    </section>
+
+    <!-- 기억 세포 -->
+    <section class="full" id="s-cell">
+      <div class="hero" id="cellHero"><img id="cellImg" src="proto/img/bagel-still.jpg" alt=""><video id="cellVid" playsinline muted loop preload="auto"></video></div>
+      <div class="prog"><i><em id="pg1"></em></i></div>
+      <button class="glassbtn" data-close style="position:absolute;left:16px;top:52px;z-index:5"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></button>
+      <button class="glassbtn" style="position:absolute;right:16px;top:52px;z-index:5"><svg width="18" height="18" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg></button>
+      <div id="bubs"></div>
+      <div style="position:absolute;left:20px;right:20px;top:606px">
+        <div class="row" style="gap:12px"><i style="width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 40%,var(--coral),var(--blue));filter:blur(2px)"></i><div style="flex:1"><b style="font-size:20px" id="cellTitle">처음 간 베이글집</b><div class="muted row" style="font-size:12px;margin-top:2px;justify-content:space-between"><span id="cellMeta">3월 4일 · Bagel &amp; Co. · 12번째</span><span id="cellTime">0:00 / 0:08</span></div></div></div>
+        <div class="ai" style="margin-top:22px">✦ AI 한 줄</div>
+        <div style="font-size:15px;line-height:1.6;margin-top:4px" id="cellAi">아침 수업 전, 혼자 들르던 곳이에요. 이번 달에만 6번 왔고, 세포가 두 배로 자랐어요.</div>
+        <div class="row muted" style="gap:6px;margin-top:40px;font-size:13px"><span class="avs"><span class="av m" style="width:22px;height:22px;font-size:10px">엄</span><span class="av j" style="width:22px;height:22px;font-size:10px">지</span></span>한마디를 누르면 답글을 달 수 있어요</div>
+      </div>
+      <div class="reply" id="reply"><div class="muted" style="font-size:12px;margin-bottom:8px" id="replyTo">엄마에게 답글</div><div class="row"><input id="replyIn" placeholder="답글을 입력하세요" maxlength="40"><button class="send" id="replySend"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg></button></div></div>
+    </section>
+
+    <!-- 새 세포가 피어남 -->
+    <section class="full" id="s-newcell" style="background:linear-gradient(var(--card) 60%,var(--bg2))">
+      <button class="glassbtn" data-close style="position:absolute;right:20px;top:50px"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <div class="muted" style="position:absolute;left:0;right:0;top:118px;text-align:center;font-size:13px">새 세포가 피어났어요</div>
+      <div class="orb" id="ncOrb"><img src="proto/img/cat-still.jpg" alt=""><video id="ncVid" playsinline muted loop preload="auto"></video><div class="vui"><div class="tl2">노마드로 담은 영상</div><span class="vplay"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="#fff"/></svg></span><div class="bl" id="ncTime">고양이 영상 · 0:08</div></div></div><svg class="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48.5" fill="none" stroke="#F27355" stroke-width="1.6" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" id="ncRing"/></svg>
+      <div style="position:absolute;left:0;right:0;top:420px;text-align:center"><div style="font-size:28px;font-weight:700">고양이</div><div style="margin-top:10px"><span class="badge"><i></i>처음 만난 것 · 동물</span></div><div class="muted" style="font-size:14px;margin-top:10px">공원 산책길 · 오후 5:40</div></div>
+      <div class="card" style="top:522px;padding:16px 18px;box-shadow:0 8px 30px rgba(242,115,85,.08),inset 0 0 0 1px #F6EEEA"><div style="font-size:12px;color:var(--ink2);font-weight:600">✦ AI가 본 것</div><div style="font-size:14px;line-height:1.6;margin-top:6px">공원 산책길에서 처음 만난 치즈냥이예요. 학교 동네 옆에 새 세포로 피어났어요.</div></div>
+      <button class="cta grad" id="goSee" style="top:708px">내 세계에서 보러 가기</button>
+      <button data-close style="position:absolute;left:0;right:0;top:776px;text-align:center;font-size:13px;color:var(--ink2)">닫기</button>
+    </section>
+
+    <div id="banner" class="pill"><span class="ic"></span><span style="flex:1"><b style="font-size:15px;display:block">새 세포가 피어났어요</b><span class="muted" style="font-size:12px">공원 산책길 · 오후 5:40</span></span><span class="muted" style="font-size:12px">지금</span></div>
+    <div id="toast"></div>
+    <div class="homebar"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- 데이터 ---------- */
+const PLACES={
+  block4:{title:'학교 동네',chip:'세포 24',tag:'베이글집',tagSub:'12번 다녀감 · 자라는 중',name:'Bagel & Co.',meta:'음식 · 학교 앞 · 3월 4일 처음',desc:'아침 수업 전에 혼자 들르던 곳',blob:'#F2A4A4',cell:'bagel'},
+  houseA:{title:'학교 동네',chip:'세포 18',tag:'학교',tagSub:'매일 · 디자인 수업',name:'디자인 스쿨',meta:'공부 · 3월 2일 처음',desc:'디자인 수업을 듣는 곳',blob:'#F27355',cell:'bagel'},
+  houseB:{title:'우리 동네',chip:'세포 31',tag:'우리 집',tagSub:'382일 · 가장 큰 세포',name:'플랫 23',meta:'집 · 2월 26일 처음',desc:'창가에 노란 불이 켜지는 집',blob:'#FCD96B',cell:'home'},
+  cat:{title:'공원 산책길',chip:'세포 1',tag:'고양이',tagSub:'오늘 처음 · 새로 피어남',name:'공원 치즈냥이',meta:'동물 · 공원 산책길 · 오후 5:40',desc:'처음 만난 치즈냥이',blob:'#F7A25E',cell:'cat'},
+  canal:{title:'운하 동네',chip:'세포 1',tag:'운하길',tagSub:'방금 생김 · 20분 걸음',name:'리젠트 운하길',meta:'산책 · 오늘 처음 · 노마드 기록 20분',desc:'노마드가 기록한 첫 산책길',blob:'#8FB5CB',cell:null},
+  landmark:{title:'광장',chip:'세포 9',tag:'시계탑',tagSub:'5번 다녀감',name:'시계탑 광장',meta:'산책 · 3월 9일 처음',desc:'지수와 처음 만난 곳',blob:'#8FB5CB',cell:'bagel'},
+};
+const placeOf=t=>PLACES[t]||{title:'동네',chip:'세포 '+(4+((t||'').length*3)%9),tag:t&&t.startsWith('road')?'운하 옆 길':'새 동네',tagSub:'둘러보는 중',name:'이름 없는 동네',meta:'아직 기록 없음',desc:'더 자주 오면 세포가 피어나요',blob:'#BDCB8F',cell:null};
+const CELLS={
+  bagel:{img:'proto/img/bagel-still.jpg',video:'proto/video/bagel.mp4',title:'처음 간 베이글집',meta:'3월 4일 · Bagel & Co. · 12번째',ai:'아침 수업 전, 혼자 들르던 곳이에요. 이번 달에만 6번 왔고, 세포가 두 배로 자랐어요.',bubs:[['j','지수','나도 뉴욕에서 비슷한 데 찾았어!'],['m','엄마','맛있어 보인다. 아침 꼭 챙겨 먹어']]},
+  cat:{img:'proto/img/cat-still.jpg',video:'proto/video/cat.mp4',title:'공원에서 만난 치즈냥이',meta:'10월 30일 · 공원 산책길 · 1번째',ai:'공원 산책길에서 처음 만난 치즈냥이예요. 학교 동네 옆에 새 세포로 피어났어요.',bubs:[['j','지수','헐 너무 귀여워! 이름 지어줘'],['m','엄마','어머 귀여워라!']]},
+  home:{img:'proto/img/home-still.jpg',video:'proto/video/home.mp4',title:'집에서 보낸 오후',meta:'10월 12일 · 플랫 23 · 31번째',ai:'비 오는 날 하루 종일 집에 있었어요. 창가 침대가 이 집에서 가장 오래 머문 자리예요.',bubs:[['a','아린','고양이 이름 뭐야?? 너무 귀엽다'],['m','엄마','집이 아늑해 보이네']]},
+};
+const DAY=[{t:'08:12',n:'베이글집 · 아침 베이글',d:'세포가 자랐어요',img:'proto/img/t-bagel.jpg',type:'block4',next:'학교'},
+           {t:'10:00',n:'학교 · 디자인 수업',d:'학교 동네에 붙었어요',img:'proto/img/t-school.png',type:'houseA',next:'고양이'},
+           {t:'17:40',n:'공원 산책길 · 고양이',d:'새 세포가 피어났어요',img:'proto/img/t-cat.jpg',type:'cat',next:null}];
+const CITYK={london:'런던',seoul:'서울',newyork:'뉴욕',paris:'파리'};
+
+/* ---------- 월드 연결 ---------- */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const frame=$('#world'),wrap=$('#worldWrap');
+const W=()=>frame.contentWindow&&frame.contentWindow.__api;
+let ready=false;
+const whenReady=()=>new Promise(r=>{const t=setInterval(()=>{const w=frame.contentWindow;if(w&&w.__api&&w.__ready){clearInterval(t);r();}},120);});
+// 화면별 월드 영역 + 카메라
+const VIEWS={home:{top:128,h:472,vh:11.3},explore:{top:130,h:510,vh:13.5,fz:1.45},day:{top:110,h:400,vh:11.5,fz:1.2},done:{top:125,h:337,vh:10.5},full:{top:128,h:472,vh:12.5}};
+function setView(k){const v=VIEWS[k];const T=v.top,H=v.h+T;wrap.style.top='0px';wrap.style.height=H+'px';
+  // 월드가 화면에서 놓이는 자리와 크기는 그대로 두고, 위쪽(탑바 뒤)까지 월드를 채움
+  if(W())W().view({vh:v.vh*H/v.h,fz:v.fz||1.3,ty:.9+(T/2)/(v.h/v.vh)/.816*(+(window.TYK||1))});}
+
+/* ---------- 상태 ---------- */
+let cur='home',stack=[],explType='block4',followIdx=-1,city='london',pinsOn=false,notified=false;
+function show(id,push=true){
+  if(push&&cur!==id)stack.push(cur);cur=id;
+  $$('.scr').forEach(s=>s.classList.toggle('on',s.id==='s-'+id));
+  $$('#nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===id||(id==='day'&&followIdx>=0&&b.dataset.go==='follow')));
+  wrap.classList.toggle('wrap-nochip',!(id==='home'||id==='done'));$('#envPop').style.display='none';
+  setView(id==='explore'?'explore':id==='day'?'day':id==='done'?'done':'home');
+  $('#exTag').style.opacity=0;$('#route').innerHTML='';
+  if(id!=='explore'&&id!=='day'&&W())W().focus(null);
+  if(id==='home'){$('#pins').style.opacity=1;}else $('#pins').style.opacity=0;
+  if(id==='day')renderDay();
+  if(id==='done')countUp();
+}
+function back(){if(followIdx>=0){followIdx=-1;}const p=stack.pop()||'home';show(p,false);}
+
+/* 탭바 */
+const TABS=[['세계','<path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z" fill="currentColor"/>'],['기억','<rect x="4" y="4" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="4" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="4" y="13" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="13" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>'],['구경','<path d="M21 3L3 10.5l7.5 3 3 7.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'],['마이','<circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" stroke-width="1.8"/>']];
+$$('[data-tabs]').forEach(nav=>{TABS.forEach(([l,p],i)=>{const b=document.createElement('button');b.className='tab'+(i===0?' on':'');b.innerHTML=`<svg viewBox="0 0 24 24">${p}</svg>${l}`;
+  b.onclick=()=>{if(i===0)show('home');else if(i===3)show('done');else toast('이 프로토타입은 메인 흐름만 담았어요');};nav.appendChild(b);});});
+
+/* 토스트 */
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2000);}
+
+/* ---------- 홈 ---------- */
+$('#spin').onclick=()=>{W()&&W().spin();};
+/* 오늘의 할 일: 사용자가 누른다고 끝나지 않음. 노마드가 20분 걷기를 기록해야 완료 → 운하가 생김 */
+let taskState='idle',taskMin=0,taskT;
+const DROP='<svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z" fill="#8FB5CB"/></svg>';
+function openTask(on){$('#taskSheet').style.transform=on?'none':'translateY(110%)';$('#taskDim').style.opacity=on?1:0;$('#taskDim').style.pointerEvents=on?'auto':'none';}
+function paintTask(){const p=taskMin/20;$('#taskBar').style.width=p*100+'%';$('#taskMin').textContent=`${Math.floor(taskMin)} / 20분`;
+  const ic=$('#taskIc');
+  if(taskState==='idle'){$('#taskLab').textContent='오늘의 작은 할 일 · 노마드가 기록해요';$('#taskState').textContent='노마드 기록 대기 중';ic.style.background='';ic.innerHTML=DROP;}
+  if(taskState==='rec'){$('#taskLab').textContent=`노마드 기록 중 · ${Math.floor(taskMin)} / 20분`;$('#taskState').textContent='노마드가 걷기를 기록하는 중';
+    ic.style.border='0';ic.style.background=`conic-gradient(var(--blue) ${p*360}deg,#ECEAE7 0)`;ic.innerHTML='<i style="width:36px;height:36px;border-radius:50%;background:var(--card);display:grid;place-items:center">'+DROP+'</i>';}
+  if(taskState==='done'){$('#task').classList.add('done');$('#taskLab').textContent='노마드가 기록했어요 · 운하가 생겼어요';$('#taskState').textContent='기록 완료';ic.style.background='';ic.style.border='';
+    ic.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>';}}
+function nomadWalk(){if(taskState!=='idle')return;taskState='rec';taskMin=0;paintTask();
+  taskT=setInterval(()=>{taskMin=Math.min(20,taskMin+20/55);paintTask();if(taskMin>=20){clearInterval(taskT);taskState='done';paintTask();
+    setTimeout(()=>{openTask(false);if(cur!=='home')show('home');toast('노마드가 운하길 20분을 기록했어요');
+      if(W()&&W().addCanal())setTimeout(()=>openExplore('canal'),1300);},700);}},100);}
+$('#task').onclick=()=>openTask(true);
+$('#taskClose').onclick=()=>openTask(false);$('#taskDim').onclick=()=>openTask(false);
+$('#taskDemo').onclick=()=>{nomadWalk();};
+addEventListener('keydown',e=>{if((e.key==='w'||e.key==='W'||e.key==='ㅈ')&&document.activeElement.tagName!=='INPUT'){if(cur!=='home'){closeFull();show('home');}openTask(true);nomadWalk();}});
+$('#toDay').onclick=()=>{followIdx=-1;show('day');};
+addEventListener('keydown',e=>{if((e.key==='n'||e.key==='N'||e.key==='ㅜ')&&document.activeElement.tagName!=='INPUT')notify(true);});
+$('#visitors').onclick=()=>{showPins(true);toast('엄마 · 지수 · 아린이 세계에 다녀갔어요');};
+
+/* 방문자 핀 (월드 위 좌표에 붙어 다님) */
+const PINS=[['a','아','houseB','아린 · 우리 집','home'],['m','엄','block4','엄마 · 베이글집','bagel'],['j','지','cat','지수 · 치즈냥이','cat']];
+function buildPins(){$('#pins').innerHTML=PINS.map(([c,ch,t,l,k])=>`<div class="pin" data-t="${t}" data-cell="${k}"><span class="av ${c}">${ch}</span><span class="lb">${l}</span></div>`).join('');
+  $$('.pin').forEach(p=>p.onclick=()=>{openCell(p.dataset.cell);});}
+function showPins(on){pinsOn=on;$$('.pin').forEach((p,i)=>setTimeout(()=>p.classList.toggle('show',on),on?i*160:0));}
+function tick(){
+  const w=W();
+  if(w&&w.project){
+    $$('.pin').forEach(p=>{const q=w.project(p.dataset.t,.75);if(q){p.style.left=q[0]+'px';p.style.top=q[1]+'px';}});
+    if(cur==='explore'){const q=w.project(explType,.6);const tg=$('#exTag');if(q){tg.style.left=q[0]+'px';tg.style.top=(wrap.offsetTop+q[1])+'px';}}
+    if(cur==='day')drawRoute();
+  }
+  requestAnimationFrame(tick);
+}
+
+/* 알림 배너 */
+function notify(force){if(notified&&!force)return;notified=true;closeFull();if(cur!=='home')show('home');$('#banner').classList.remove('show');void $('#banner').offsetWidth;$('#banner').classList.add('show');clearTimeout(window._bt);window._bt=setTimeout(()=>$('#banner').classList.remove('show'),6000);if(W())setTimeout(()=>W().hop('cat'),500);}
+$('#banner').onclick=()=>{$('#banner').classList.remove('show');openFull('newcell');};
+
+/* ---------- 둘러보기 ---------- */
+window.addEventListener('message',e=>{const d=e.data;if(!d||d.nostos!=='focus')return;
+  if(d.type&&!['tile0','tile1','tile2','tile3','tile4','tile5','tile6'].includes(d.type)||d.type&&cur==='explore'){openExplore(d.type,true);}
+  else if(!d.type&&cur==='explore'){/* 빈 곳 클릭: 유지 */}
+});
+function openExplore(type,fromWorld){
+  if(cur==='day')return;
+  explType=type;const P=placeOf(type);
+  $('#exTitle').textContent=P.title;$('#exChip').textContent=P.chip;$('#exName').textContent=P.name;$('#exMeta').textContent=P.meta;$('#exDesc').textContent=P.desc;$('#exBlob').style.background=P.blob;
+  $('#exTag').innerHTML=`${P.tag}<small>${P.tagSub}</small>`;
+  if(cur!=='explore')show('explore');
+  if(!fromWorld&&W())W().focus(type);
+  setTimeout(()=>{$('#exTag').style.opacity=1;},500);
+  $('#openCell').onclick=()=>P.cell?openCell(P.cell,$('#openCell')):toast('아직 이곳의 기억이 없어요');
+}
+
+/* ---------- 영상: proto/video/*.mp4 가 있으면 재생, 없으면 사진 ---------- */
+function loadVid(v,src,box){box.classList.remove('hasvid','playing');v.removeAttribute('src');v.load();if(!src)return;
+  v.onloadeddata=()=>{box.classList.add('hasvid');v.currentTime=0;v.play().then(()=>box.classList.add('playing')).catch(()=>{});};
+  v.onerror=()=>box.classList.remove('hasvid');v.src=src;v.load();}
+const ncVid=$('#ncVid'),ncOrb=$('#ncOrb');
+ncOrb.onclick=()=>{if(!ncOrb.classList.contains('hasvid'))return;if(ncVid.paused){ncVid.play();ncOrb.classList.add('playing');}else{ncVid.pause();ncOrb.classList.remove('playing');}};
+ncVid.ontimeupdate=()=>{const d=ncVid.duration||8;$('#ncRing').setAttribute('stroke-dasharray',`${ncVid.currentTime/d*100} 100`);$('#ncTime').textContent=`고양이 영상 · 0:${String(Math.round(d-ncVid.currentTime)).padStart(2,'0')}`;};
+const cellVid=$('#cellVid');
+/* ---------- 오버레이: 기억 세포 / 새 세포 ---------- */
+let pgT;
+function morphVars(s,el){const ph=$('#phone'),pr=ph.getBoundingClientRect(),r=el.getBoundingClientRect(),k=pr.width/ph.offsetWidth;
+  s.style.setProperty('--t',((r.top-pr.top)/k)+'px');s.style.setProperty('--l',((r.left-pr.left)/k)+'px');s.style.setProperty('--r',((pr.right-r.right)/k)+'px');s.style.setProperty('--b',((pr.bottom-r.bottom)/k)+'px');
+  s.style.setProperty('--rad',(parseFloat(getComputedStyle(el).borderRadius)||22)+'px');}
+function openFull(id,from){$('#banner').classList.remove('show');if(id==='newcell')loadVid(ncVid,CELLS.cat.video,ncOrb);
+  const S=$('#s-'+id);
+  if(from){morphVars(S,from);S.classList.add('morph');void S.offsetWidth;$('#s-explore').classList.add('sink');}else{S.classList.remove('morph');}
+  S.classList.add('on');$$('#nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===id));}
+function closeFull(){$('#s-explore').classList.remove('sink');ncVid.pause();cellVid.pause();$$('.full').forEach(f=>f.classList.remove('on'));$('#reply').classList.remove('on');clearInterval(pgT);$$('#nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===cur));}
+$$('[data-close]').forEach(b=>b.onclick=closeFull);
+function openCell(k,from){const C=CELLS[k];$('#cellImg').src=C.img;$('#cellImg').style.animation='none';void $('#cellImg').offsetWidth;$('#cellImg').style.animation='';
+  $('#cellTitle').textContent=C.title;$('#cellMeta').textContent=C.meta;$('#cellAi').textContent=C.ai;
+  $('#bubs').innerHTML='';C.bubs.forEach((b,i)=>addBub(b,i));openFull('cell',from);
+  loadVid(cellVid,C.video,$('#cellHero'));
+  let t=0;$('#pg1').style.width=0;clearInterval(pgT);
+  pgT=setInterval(()=>{t=$('#cellHero').classList.contains('hasvid')?cellVid.currentTime/(cellVid.duration||8)*8:t+.1;$('#pg1').style.width=Math.min(1,t/8)*100+'%';{const D=$('#cellHero').classList.contains('hasvid')&&cellVid.duration?Math.round(cellVid.duration):8;$('#cellTime').textContent=`0:0${Math.min(D,Math.floor(t*D/8))} / 0:0${D}`;}if(t>=8)clearInterval(pgT);},100);}
+function addBub([c,n,m],i,mine){const d=document.createElement('div');d.className='bub';d.style.top=(mine?380:440+i*52)+'px';d.style.animationDelay=(mine?0:.3+i*.25)+'s';
+  d.innerHTML=`<span class="av ${c}" style="width:24px;height:24px;font-size:10px">${n[0]}</span><b>${n}</b>${m}`;
+  if(!mine)d.onclick=()=>{$('#replyTo').textContent=n+'에게 답글';$('#reply').classList.add('on');setTimeout(()=>$('#replyIn').focus(),350);};$('#bubs').appendChild(d);}
+$('#replySend').onclick=sendReply;$('#replyIn').onkeydown=e=>{if(e.key==='Enter')sendReply();};
+function sendReply(){const v=$('#replyIn').value.trim();if(!v)return;addBub(['a','나',v],0,true);$('#replyIn').value='';$('#reply').classList.remove('on');toast('답글을 남겼어요');}
+$('#goSee').onclick=()=>{closeFull();show('home');setTimeout(()=>openExplore('cat'),350);setTimeout(()=>W()&&W().hop('cat'),1200);};
+
+/* ---------- 오늘의 하루 / 하루 따라가기 ---------- */
+function renderDay(){
+  const f=followIdx>=0;$('#dayTitle').textContent=f?'하루 따라가기':'오늘 다닌 길';$('#dayCount').textContent=f?`${followIdx+1} / 3`:'3곳 · 세포 3';
+  $('#tl').className='tl'+(f?' follow':'');
+  $('#tl').innerHTML=DAY.map((s,i)=>`<div class="it${i===followIdx?' cur':''}" data-i="${i}"><i class="th" style="background-image:url(${s.img})"></i><div class="t">${s.t}</div><div class="n">${s.n}</div><div class="d">${s.d}</div></div>`).join('');
+  $$('#tl .it').forEach(el=>el.onclick=()=>{followIdx=+el.dataset.i;renderDay();});
+  const cta=$('#dayCta');
+  if(!f){cta.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="#fff"/></svg>나와 함께 하루 다시 걷기';cta.onclick=()=>{followIdx=0;renderDay();};W()&&W().focus(null);}
+  else{const s=DAY[followIdx];cta.textContent=s.next?`다음 · ${s.next}`:'하루 마치기';cta.onclick=()=>{if(s.next){followIdx++;renderDay();}else{followIdx=-1;toast('오늘 하루를 다시 걸었어요');show('home');}};
+    W()&&W().focus(s.type);setTimeout(()=>W()&&W().hop(s.type),600);}
+  $$('#nav [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===(f?'follow':'day')));
+}
+function drawRoute(){const w=W();if(followIdx>=0){$('#route').innerHTML='';return;}
+  const pts=DAY.map(s=>w.project(s.type,.35)).filter(Boolean);if(pts.length<3)return;
+  let d=`M${pts[0][0]},${pts[0][1]}`;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2-28;d+=` Q${mx},${my} ${b[0]},${b[1]}`;}
+  $('#route').innerHTML=`<svg width="100%" height="100%" style="position:absolute;inset:0"><path d="${d}" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="0 9" stroke-linecap="round"/></svg>`+
+    pts.map((p,i)=>`<i style="position:absolute;left:${p[0]-18}px;top:${p[1]-40}px;width:36px;height:36px;border-radius:50%;background:url(${DAY[i].img}) center/cover;box-shadow:0 0 0 3px #fff,0 4px 12px rgba(0,0,0,.15)"></i>`).join('');}
+
+/* ---------- 귀국 후 ---------- */
+function countUp(){$$('#s-done [data-n]').forEach(b=>{const n=+b.dataset.n;let k=0;const t=setInterval(()=>{k++;b.textContent=Math.round(n*Math.min(1,k/30));if(k>=30)clearInterval(t);},30);});}
+$('#doneSpin').onclick=()=>W()&&W().spin();
+$('#doneNext').onclick=async()=>{await setCity('seoul');$('#dday').textContent='D+1';$('#homeSub').textContent='서울에서 자라는 나의 세계 · 4명과 함께 보는 중';show('home');toast('서울에서 새 세계가 시작됐어요');};
+
+/* ---------- 세계 설정 (왼쪽 패널) ---------- */
+async function setCity(c){city=c;$$('#segCity button').forEach(b=>b.classList.toggle('on',b.dataset.city===c));await W().env({city:c});
+  $('#doneTitle').textContent=CITYK[c]+'에서의 382일';$('#homeSub').textContent=CITYK[c]+'에서 자라는 나의 세계 · 4명과 함께 보는 중';$('#doneNext').textContent=(c==='seoul'?'런던':'서울')+'에서 새 세계 시작하기';}
+$$('#segCity button').forEach(b=>b.onclick=()=>setCity(b.dataset.city));
+$$('#nav [data-go]').forEach(b=>b.onclick=()=>{const g=b.dataset.go;closeFull();
+  if(g==='replay'){location.reload();return;}
+  if(g==='notify'){setTimeout(()=>notify(true),150);return;}
+  if(g==='walk'){show('home');openTask(true);nomadWalk();return;}
+  if(g==='cell')return openCell('bagel');if(g==='newcell')return openFull('newcell');
+  if(g==='explore')return openExplore('block4');if(g==='follow'){followIdx=0;return show('day');}
+  if(g==='day'){followIdx=-1;}show(g);});
+$$('[data-back]').forEach(b=>b.onclick=back);
+
+/* ---------- 계절 · 밤낮: 월드 + 앱 테마 + 상태바 + 파티클이 함께 바뀜 ---------- */
+const ENVS={season:'summer',time:'day'};
+const SEASONK={spring:'봄',summer:'여름',autumn:'가을',winter:'겨울'};
+const SEASON_MSG={spring:'봄이 왔어요 · 벚꽃이 피었어요',summer:'여름이에요 · 나무가 짙어졌어요',autumn:'가을이에요 · 나무들이 물들었어요',winter:'겨울이에요 · 세계에 눈이 쌓였어요'};
+const EIC={spring:'<svg width="16" height="16" viewBox="0 0 24 24"><g fill="#F2A4A4"><circle cx="12" cy="6.5" r="4"/><circle cx="17.2" cy="10.3" r="4"/><circle cx="15.2" cy="16.4" r="4"/><circle cx="8.8" cy="16.4" r="4"/><circle cx="6.8" cy="10.3" r="4"/></g><circle cx="12" cy="12" r="2.6" fill="#FCD96B"/></svg>',
+  summer:'<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#FCD96B"/><g stroke="#F7A25E" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg>',
+  autumn:'<svg width="16" height="16" viewBox="0 0 24 24"><path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15z" fill="#F27355"/><path d="M5 19L14 10" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  winter:'<svg width="16" height="16" viewBox="0 0 24 24" stroke="#8FB5CB" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 4l3 2.5L15 4M9 20l3-2.5 3 2.5"/></svg>',
+  night:'<svg width="16" height="16" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="#FCD96B"/></svg>'};
+function paintEnvUI(){const n=ENVS.time==='night';
+  $('#phone').classList.toggle('night',n);$('#clock').textContent=n?'21:40':'9:41';
+  $('#envTx').textContent=SEASONK[ENVS.season]+' · '+(n?'밤':'낮');$('#envIc').innerHTML=(n?EIC.night:'')+EIC[ENVS.season];$('#envIc').style.display='flex';
+  $$('#segSeason button,#popSeason button').forEach(b=>b.classList.toggle('on',b.dataset.season===ENVS.season));
+  $$('#segTime button,#popTime button').forEach(b=>b.classList.toggle('on',b.dataset.time===ENVS.time));
+  fxSet();}
+async function setEnv(o,quiet){const prev={...ENVS};Object.assign(ENVS,o);paintEnvUI();
+  if(!quiet){if(o.time&&o.time!==prev.time)toast(o.time==='night'?'밤이 됐어요 · 창문과 가로등에 불이 켜졌어요':'아침이 밝았어요');else if(o.season&&o.season!==prev.season)toast(SEASON_MSG[o.season]);}
+  if(W())await W().env({season:ENVS.season,time:ENVS.time});}
+$('#popSeason').innerHTML=Object.keys(SEASONK).map(k=>`<button data-season="${k}">${SEASONK[k]}</button>`).join('');
+$('#popTime').innerHTML='<button data-time="day">낮</button><button data-time="night">밤</button>';
+$$('#segSeason button,#popSeason button').forEach(b=>b.onclick=()=>setEnv({season:b.dataset.season}));
+$$('#segTime button,#popTime button').forEach(b=>b.onclick=()=>setEnv({time:b.dataset.time}));
+$('#envChip').onclick=e=>{e.stopPropagation();const p=$('#envPop');p.style.display=p.style.display==='none'?'block':'none';};
+document.addEventListener('click',e=>{if(!e.target.closest('#envPop')&&!e.target.closest('#envChip'))$('#envPop').style.display='none';});
+addEventListener('keydown',e=>{if(document.activeElement.tagName==='INPUT')return;const order=['spring','summer','autumn','winter'];
+  if(e.key==='s'||e.key==='S'||e.key==='ㄴ')setEnv({season:order[(order.indexOf(ENVS.season)+1)%4]});
+  if(e.key==='d'||e.key==='D'||e.key==='ㅇ')setEnv({time:ENVS.time==='night'?'day':'night'});});
+
+/* 파티클: 봄 꽃잎 · 여름 햇살 먼지 · 가을 낙엽 · 겨울 눈 · 밤 별과 반딧불 */
+const fx=$('#fx'),fc=fx.getContext('2d');let parts=[];
+const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
+function mk(k,init){const w=wrap.offsetWidth,h=wrap.offsetHeight;const p={k,x:rnd(0,w),y:init?rnd(0,h):rnd(-30,-6),a:rnd(0,6.28),t:rnd(0,100)};
+  if(k==='petal')Object.assign(p,{r:rnd(3,5.5),vy:rnd(.25,.5),c:pick(['#F2A4A4','#F8C8C5','#FCE1DB'])});
+  if(k==='leaf')Object.assign(p,{r:rnd(4,6.5),vy:rnd(.4,.75),c:pick(['#F27355','#FCD96B','#E0874A','#D7BA61'])});
+  if(k==='snow')Object.assign(p,{r:rnd(1.2,2.8),vy:rnd(.35,.8),c:'#fff'});
+  if(k==='dust'){Object.assign(p,{r:rnd(1,2),vy:-rnd(.08,.2),c:'#FCD96B'});if(!init)p.y=h+6;}
+  if(k==='star')Object.assign(p,{r:rnd(.6,1.4),vy:0,y:rnd(4,h*.32),c:'#fff'});
+  if(k==='fly')Object.assign(p,{r:rnd(1.6,2.4),vy:0,y:rnd(h*.35,h*.85),c:'#FCD96B'});
+  return p;}
+function fxSet(){const n=ENVS.time==='night',S=ENVS.season;parts=[];const add=(k,c)=>{for(let i=0;i<c;i++)parts.push(mk(k,true));};
+  if(S==='spring')add('petal',22);if(S==='autumn')add('leaf',18);if(S==='winter')add('snow',70);if(S==='summer'&&!n)add('dust',16);
+  if(n){add('star',34);if(S!=='winter')add('fly',14);}}
+function fxDraw(){const w=wrap.offsetWidth,h=wrap.offsetHeight,dpr=2;if(fx.width!==w*dpr||fx.height!==h*dpr){fx.width=w*dpr;fx.height=h*dpr;}
+  fc.setTransform(dpr,0,0,dpr,0,0);fc.clearRect(0,0,w,h);
+  for(const p of parts){p.t+=.016;
+    if(p.k==='star'){fc.globalAlpha=.35+.45*Math.abs(Math.sin(p.t*1.3+p.a));fc.fillStyle='#fff';fc.beginPath();fc.arc(p.x,p.y,p.r,0,6.28);fc.fill();continue;}
+    if(p.k==='fly'){p.x+=Math.cos(p.t*.7+p.a)*.35;p.y+=Math.sin(p.t*.9+p.a)*.25;fc.globalAlpha=.4+.5*Math.abs(Math.sin(p.t*2+p.a));fc.shadowColor='#FCD96B';fc.shadowBlur=10;fc.fillStyle=p.c;fc.beginPath();fc.arc(p.x,p.y,p.r,0,6.28);fc.fill();fc.shadowBlur=0;continue;}
+    p.y+=p.vy;p.x+=Math.sin(p.t*1.2+p.a)*(p.k==='snow'?.25:.6);p.a+=.02;
+    if(p.y>h+12||p.y<-40)Object.assign(p,mk(p.k,false));
+    fc.globalAlpha=p.k==='dust'?.5:.92;fc.fillStyle=p.c;
+    if(p.k==='snow'){fc.shadowColor='rgba(110,130,150,.45)';fc.shadowBlur=3;fc.beginPath();fc.arc(p.x,p.y,p.r,0,6.28);fc.fill();fc.shadowBlur=0;}
+    else if(p.k==='dust'){fc.beginPath();fc.arc(p.x,p.y,p.r,0,6.28);fc.fill();}
+    else{fc.save();fc.translate(p.x,p.y);fc.rotate(p.a*(p.k==='leaf'?2:1));fc.beginPath();fc.ellipse(0,0,p.r,p.r*(p.k==='leaf'?.5:.62),0,0,6.28);fc.fill();
+      if(p.k==='leaf'){fc.strokeStyle='rgba(255,255,255,.5)';fc.lineWidth=.6;fc.beginPath();fc.moveTo(-p.r,0);fc.lineTo(p.r,0);fc.stroke();}fc.restore();}}
+  fc.globalAlpha=1;requestAnimationFrame(fxDraw);}
+paintEnvUI();requestAnimationFrame(fxDraw);
+
+/* ---------- 폰 크기 맞춤 ---------- */
+function fit(){const s=Math.min(1,(innerHeight-40)/852,(innerWidth-(innerWidth>760?300:20))/393);$('#phone').style.setProperty('--fit',s);}
+addEventListener('resize',fit);fit();
+
+/* ---------- 시연 순서 ---------- */
+const DEMO=[
+ ['1','홈 · 세계 등장',async()=>{closeFull();await setEnv({season:'summer',time:'day'},true);show('home');}],
+ ['2','세계 돌려 보기',()=>{closeFull();show('home');W()&&W().spin();}],
+ ['3','계절 · 가을',()=>setEnv({season:'autumn'})],
+ ['4','계절 · 겨울',()=>setEnv({season:'winter'})],
+ ['5','밤으로 전환',()=>setEnv({time:'night'})],
+ ['6','낮 · 봄으로 복귀',async()=>{await setEnv({time:'day'},true);await setEnv({season:'spring'});}],
+ ['7','새 세포 알림',async()=>{await setEnv({season:'summer'},true);setTimeout(()=>notify(true),150);}],
+ ['8','새 세포 열기 (고양이)',()=>openFull('newcell')],
+ ['9','세계 둘러보기 · 베이글집',()=>{closeFull();openExplore('block4');}],
+ ['10','기억 열어 보기 (영상)',()=>openCell('bagel')],
+ ['11','하루 따라가기',()=>{closeFull();followIdx=0;show('day');}],
+ ['12','귀국 후 · 완성된 세계',()=>{closeFull();followIdx=-1;show('done');}]];
+let demoI=-1;
+$('#demo').innerHTML=DEMO.map((d,i)=>`<button data-di="${i}"><b style="opacity:.55;margin-right:6px">${d[0]}</b>${d[1]}</button>`).join('');
+function runDemo(i){i=Math.max(0,Math.min(DEMO.length-1,i));demoI=i;$$('#demo button').forEach((b,j)=>b.classList.toggle('on',j===i));DEMO[i][2]();}
+$$('#demo button').forEach(b=>b.onclick=()=>runDemo(+b.dataset.di));
+addEventListener('keydown',e=>{if(document.activeElement.tagName==='INPUT')return;
+ if(e.key===' '||e.key==='ArrowRight'){e.preventDefault();runDemo(demoI+1);}
+ if(e.key==='ArrowLeft'){e.preventDefault();runDemo(demoI-1);}});
+
+/* ---------- 시작: 등장 → 방문자 → 알림 ---------- */
+buildPins();show('home',false);requestAnimationFrame(tick);
+whenReady().then(()=>{ready=true;setView('home');
+  setTimeout(()=>showPins(true),3200);
+  setTimeout(notify,4600);});
+</script>
+</body>
+</html>
