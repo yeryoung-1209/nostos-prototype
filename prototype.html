@@ -318,7 +318,7 @@
         <div id="memGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
       </div>
       <div class="mview hit" id="mv-core" style="display:none">
-        <div id="coreCloud" style="position:relative;height:190px;margin:4px 0 10px"></div>
+        <div id="coreCloud" style="position:relative;height:236px;margin:0"></div>
         <div id="coreList"></div>
       </div>
       <nav class="tabbar pill hit" data-tabs></nav>
@@ -691,13 +691,15 @@ addEventListener('resize',fit);fit();
 
 /* ---------- 기억 · 친구 탭 (Figma UI-03 · UI-04) ---------- */
 const IMG={bagel:'proto/img/bagel-still.jpg',cat:'proto/img/cat-still.jpg',home:'proto/img/home-still.jpg',school:'proto/img/school-still.jpg',canal:'proto/img/canal-still.jpg',landmark:'proto/img/landmark-still.jpg'};
+const CELLCOL={친구:['#f28b7d','#f2a4a4','#f27355'],음식:['#f7a660','#f27355','#fcd96b'],장소:['#a6c0ad','#8fb5cb','#bdcb8f'],문화:['#c5c79b','#fcd96b','#8fb5cb'],행동:['#a6c0ad','#bdcb8f','#8fb5cb'],장보기:['#f7a660','#fcd96b','#f27355'],쇼핑:['#d7b799','#f2a4a4','#bdcb8f'],노스토스:['#d7b799','#bdcb8f','#f2a4a4']};
+const orbH=(cat,sz,extra='')=>{const c=CELLCOL[cat]||CELLCOL.장소;return `<i class="orbc" style="width:${sz}px;height:${sz}px;--o1:${c[0]};--o2:${c[1]};--o3:${c[2]};${extra}"></i>`;};
 const ORB=(c1,c2,c3)=>`<i class="orbc" style="--o1:${c1};--o2:${c2};--o3:${c3}"></i>`;
 // 달력
 $('#calWeek').innerHTML=['일','월','화','수','목','금','토'].map(d=>`<div class="d hd">${d}</div>`).join('');
-const CALM={4:['#c19490','#8fb5cb','#f27355'],5:['#c5c79b','#8fb5cb','#fcd96b'],6:['#c19490','#f27355','#8fb5cb'],9:['#c19490','#8fb5cb','#f27355'],12:['#c19490','#f27355','#8fb5cb'],13:['#c5c79b','#8fb5cb','#fcd96b'],16:['#c5c79b','#8fb5cb','#fcd96b'],18:['#c19490','#f27355','#8fb5cb'],23:['#c19490','#f27355','#8fb5cb'],24:['#c5c79b','#fcd96b','#8fb5cb'],25:['#c19490','#f27355','#8fb5cb'],26:['#c19490','#f27355','#8fb5cb'],28:['#c5c79b','#8fb5cb','#fcd96b']};
+const CALM={4:'음식',5:'장소',6:'친구',9:'행동',12:'친구',13:'문화',16:'장보기',18:'장소',23:'음식',24:'쇼핑',25:'문화',26:'친구',28:'노스토스',30:'행동',2:'장소',8:'음식'};
 let calSel=12;
 function renderCal(){let h='';for(let i=0;i<5;i++)h+='<div class="d"></div>';
-  for(let d=1;d<=30;d++){const m=CALM[d];h+=`<button class="d hit${d===calSel?' sel':''}" data-d="${d}">${m?`<i class="orbc" style="--o1:${m[0]};--o2:${m[1]};--o3:${m[2]}"></i>`:'<i style="visibility:hidden"></i>'}${d}</button>`;}
+  for(let d=1;d<=30;d++){const m=CALM[d];h+=`<button class="d hit${d===calSel?' sel':''}" data-d="${d}">${m?orbH(m,17):'<i style="visibility:hidden"></i>'}${d}</button>`;}
   $('#calGrid').innerHTML=h;
   $$('#calGrid .d[data-d]').forEach(b=>b.onclick=()=>{const d=+b.dataset.d;if(d===calSel&&CALM[d]){show('date');return;}calSel=d;renderCal();updCal();});}
 function updCal(){const n=CALM[calSel]?3:0;$('#calLab').textContent=`5월 ${calSel}일 · 세포 ${n}개`;
@@ -707,21 +709,28 @@ renderCal();updCal();
 $('#calAll').onclick=()=>show('date');
 // 날짜별 기억
 const DATEI=[['10:24','행동','#F27355','처음 타 본 트램','landmark','landmark'],['13:05','친구','#8FB5CB','같은 반 친구와 점심','school','school'],['15:12','장소','#BDCB8F','처음 간 시장','canal','canal'],['15:40','음식','#F7A25E','처음 먹어 본 과일','bagel','bagel']];
-$('#dateList').innerHTML=DATEI.map(([t,c,col,n,im,k])=>`<button class="titem hit" data-k="${k}" style="width:100%;text-align:left"><span class="tm">${t}</span><span class="th" style="background-image:url(${IMG[im]})"></span><span class="tx"><small><i style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></i>${c}</small><b>${n}</b></span><span class="muted">›</span></button>`).join('');
+$('#dateList').innerHTML=DATEI.map(([t,c,col,n,im,k])=>`<button class="titem hit" data-k="${k}" style="width:100%;text-align:left"><span class="tm">${t}</span><span class="th" style="background-image:url(${IMG[im]})"></span><span class="tx"><small>${orbH(c,12)}${c}</small><b>${n}</b></span><span class="muted">›</span></button>`).join('');
 $$('#dateList .titem').forEach(b=>b.onclick=()=>openCell(b.dataset.k,b));
 // 전체 영상
-const GIMGS=[['landmark','5.12'],['canal','5.11'],['bagel','5.10'],['cat','5.9'],['school','5.8'],['home','5.7'],['bagel','5.6'],['landmark','5.5'],['canal','5.4']];
+const GIMGS=[['landmark','5.12','장소'],['canal','5.11','친구'],['bagel','5.10','음식'],['cat','5.9','문화'],['school','5.8','행동'],['home','5.7','장보기'],['bagel','5.6','쇼핑'],['landmark','5.5','노스토스'],['canal','5.4','장소']];
 let memF='전체';
-function renderMem(){$('#memGrid').innerHTML=GIMGS.map(([k,d],i)=>`<button class="gimg hit" data-k="${k}" data-d="${d}" style="background-image:url(${IMG[k]})"></button>`).join('');
+function renderMem(){$('#memGrid').innerHTML=GIMGS.map(([k,d,c])=>`<button class="gimg hit" data-k="${k}" data-d="${d}" style="background-image:url(${IMG[k]})">${orbH(c,21,'position:absolute;left:7px;top:7px;z-index:2;filter:blur(.5px)')}</button>`).join('');
   $$('#memGrid .gimg').forEach(b=>b.onclick=()=>openCell(b.dataset.k,b));}
-$('#memChips').innerHTML=[['전체',''],['친구','#F27355'],['음식','#F7A25E'],['장소','#8FB5CB']].map(([t,c],i)=>`<button class="fchip hit${i?'':' on'}">${c?`<i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c};margin-right:5px"></i>`:''}${t}</button>`).join('');
+$('#memChips').innerHTML=['전체','친구','음식','장소'].map((t,i)=>`<button class="fchip hit${i?'':' on'}" style="display:inline-flex;align-items:center;gap:6px">${i?orbH(t,13):''}${t}</button>`).join('');
 $$('#memChips .fchip').forEach(b=>b.onclick=()=>{$$('#memChips .fchip').forEach(x=>x.classList.toggle('on',x===b));renderMem();});
 renderMem();
-// 코어 기억
-$('#coreCloud').innerHTML=[[170,30,44,'#F2A4A4'],[90,70,60,'#FCD96B'],[200,90,50,'#F27355'],[120,110,38,'#8FB5CB'],[40,60,26,'#BDCB8F'],[260,55,22,'#8FB5CB'],[290,120,20,'#FCD96B']].map(([x,y,r,c])=>`<i class="cloud" style="left:${x}px;top:${y}px;width:${r*1.4}px;height:${r*1.4}px;background:${c}"></i>`).join('')
- +[['친구',250,64],['음식',210,36],['장소',255,110],['행동',34,30]].map(([t,x,y])=>`<span style="position:absolute;left:${x}px;top:${y}px;font-size:12px;font-weight:700">${t}</span>`).join('');
-$('#coreList').innerHTML=[['처음 간 시장','5.12 · "다시 가고 싶다" · 아이디어 6','canal'],['가속사 첫 치내','3.20 · 아이디어 기억 4','landmark'],['첫 수업 발표','4.02 · 아이디어 기억 3','school']].map(([t,s,k])=>`<button class="hit row" data-k="${k}" style="width:100%;text-align:left;gap:10px;padding:14px 0"><span style="color:#F2A4A4;font-size:15px">★</span><span style="flex:1"><b style="font-size:14px;display:block">${t}</b><span class="muted" style="font-size:11.5px">${s}</span></span><span class="muted">›</span></button>`).join('');
-$$('#coreList [data-k]').forEach(b=>b.onclick=()=>openCell(b.dataset.k,b));
+// 코어 기억 (Figma: 군집 덩어리 + 주변 세포 + 별표 목록)
+(function(){const P=(x,y)=>`left:${x-20}px;top:${y-170}px`;
+  const L=(t,x,y,fs,fw)=>`<span style="position:absolute;left:${x-20}px;top:${y-170}px;font-size:${fs}px;font-weight:${fw};color:var(--ink);white-space:nowrap">${t}</span>`;
+  const O=(cat,x,y,sz,blur,op)=>orbH(cat,sz,`position:absolute;${P(x,y)};filter:blur(${blur}px);opacity:${op}`);
+  $('#coreCloud').innerHTML=
+   `<i style="position:absolute;${P(102,218)};width:136px;height:136px;border-radius:50%;background:radial-gradient(circle,rgba(255,245,237,.95) 52%,rgba(255,245,237,.0) 100%);filter:blur(2px)"></i>`
+  +`<i class="orbc" style="position:absolute;${P(131,247)};width:78px;height:78px;--o1:#ddd27d;--o2:#bdcb8f;--o3:#fcd96b;filter:blur(2px)"></i>`
+  +O('친구',223,227,72,0,1)+O('장소',202,316,56,0,1)+O('음식',85,302,38,0,.95)+O('문화',95,224,34,0,.95)+O('행동',214,184,24,1.5,.6)+O('장보기',315,319,18,1.5,.5)
+  +`<i class="orbc" style="position:absolute;${P(262,217)};width:14px;height:14px;--o1:#f28b7d;--o2:#f2a4a4;--o3:#f27355"></i>`
+  +L('친구',302,255,13,600)+L('장소',265,337,12,600)+L('음식',59,314,11,500)+L('문화',69,234,11,500)+L('행동',245,190,10,400)+L('장보기',340,322,10,400);
+  $('#coreList').innerHTML=[['처음 간 시장','5.12 · "진짜 좋았다!" · 이어진 기억 6','canal'],['기숙사 첫 저녁','3.20 · 이어진 기억 4','home'],['첫 수업 발표','4.02 · 이어진 기억 3','school']].map(([t,sub,k])=>`<button class="hit" data-k="${k}" style="width:100%;text-align:left;display:flex;align-items:center;padding:0 0 0 0;height:76px"><span style="flex:1"><b style="font-size:15px;display:flex;align-items:center;gap:8px"><span style="color:#F2A4A4;font-size:14px">★</span>${t}</b><span class="muted" style="font-size:13px;display:block;margin-top:8px">${sub}</span></span><svg width="14" height="14" viewBox="0 0 24 24" style="color:var(--ink3)"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>`).join('');
+  $$('#coreList [data-k]').forEach(b=>b.onclick=()=>openCell(b.dataset.k,b));})();
 // 기억 세그먼트
 $$('#memSeg button').forEach(b=>b.onclick=()=>{const m=b.dataset.m;$$('#memSeg button').forEach(x=>x.classList.toggle('on',x===b));['cal','all','core'].forEach(k=>$('#mv-'+k).style.display=k===m?'':'none');});
 // 친구 목록
