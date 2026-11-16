@@ -1312,7 +1312,93 @@ resize();build(current);
 window.__dbg=()=>({vh,cx,cz,innerWidth,innerHeight,dpr:devicePixelRatio,cam:[cam.left,cam.right,cam.top,cam.bottom]});
 window.__api={step:(ms)=>{CLOCK=ms;update(ms);},focus:(type)=>setFocus(pool().find(i=>i.type===type)||null),types:()=>pool().map(i=>i.type),project:(type,dy=.4)=>{const it=pool().find(i=>i.type===type);if(!it)return null;const v=new THREE.Vector3(it.pos.x,it.baseY+dy,it.pos.z).project(cam);return [(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight];}};
 window.__api.addCanal=()=>{if(CANAL)return false;CANAL=true;const it=placeCanal(true);setTimeout(()=>{it.hop=nowMs();},900);return true;};window.__api.view=o=>Object.assign(VIEW,o);window.__api.spin=(r=Math.PI*2)=>{tYaw+=r;};window.__api.hop=t=>{const it=pool().find(i=>i.type===t);if(it)it.hop=nowMs();};
-window.__api.env=async(e={})=>{Object.assign(ENV,e);await buildHand();envUI&&envUI.sync();return {...ENV};};
+
+// ===== 완성 세계용 새 건물 5종 (파스텔·다색) =====
+const PASTEL=['#BFE3D0','#D9CCF2','#BFDDF2','#F9C9A8','#FBE7A1','#F4B6C2','#CFE8A9','#F7D3E8','#B7E0E6','#FFD9B0'];
+const ROOFS=['#58524D','#C9673F','#8FA3B5','#7A4C36','#2F5A43','#B94A48'];
+function pickP(r,n=1){const a=[];for(let i=0;i<n;i++)a.push(PASTEL[Math.floor(r()*PASTEL.length)]);return a;}
+const NEWB=[
+  // 0: 알록달록 테라스 하우스 (노팅힐 느낌)
+  (g,r)=>{const n=4+Math.floor(r()*2),w=.9/n;for(let i=0;i<n;i++){const h=.3+r()*.22;
+      bld(g,{x:-.45+w/2+i*w,z:-.1,w:w-.012,d:.3,h,wall:PASTEL[Math.floor(r()*PASTEL.length)],roof:r()<.5?'gable':'flat',roofC:ROOFS[Math.floor(r()*ROOFS.length)],rh:.08,door:['#2F3A35','#D63A2A','#F2C043','#312D2A'][Math.floor(r()*4)],cap:'#F5F4F2',rows:Math.max(2,Math.round(h/.12))});}
+    for(const x of[-.5,.5])ctree(g,x,.3,.95);hedge(g,0,.28,.8,.04);lightPost(g,-.2,.4);},
+  // 1: 파스텔 타워 (아파트)
+  (g,r)=>{const c=PASTEL[Math.floor(r()*PASTEL.length)],c2=PASTEL[Math.floor(r()*PASTEL.length)];
+    bld(g,{x:-.12,z:-.06,w:.3,d:.3,h:.78,wall:c,roof:'flat',cap:'#F5F4F2',rows:6,cols:3,balc:1,band:'#FFF5ED',bandY:.12});
+    bld(g,{x:.2,z:.02,w:.22,d:.24,h:.46,wall:c2,roof:'flat',cap:'#F5F4F2',rows:3,cols:2,balc:1,door:'#312D2A'});
+    for(const [x,z] of[[-.55,.3],[.55,.3],[-.45,-.4]])ctree(g,x,z,1);bench(g,-.12,.3,0);lightPost(g,.5,.1);},
+  // 2: 컬러풀 코티지 세 채 + 꽃밭
+  (g,r)=>{const cs=pickP(r,3);[[-.38,-.12,.26,.22,.26,0],[0,.02,.28,.24,.3,.2],[.4,-.14,.26,.22,.27,-.15]].forEach(([x,z,w,d,h,ry],i)=>
+      bld(g,{x,z,w,d,h,ry,wall:cs[i],roof:'hip',roofC:ROOFS[Math.floor(r()*ROOFS.length)],rh:.12,door:'#7A4C36',chim:1,chimC:'#C9673F',rows:2}));
+    flowers(g,-.15,.4,.3,.08);flowers(g,.3,.4,.24,.08);ctree(g,-.6,.2,1);ctree(g,.62,.24,.95);hedge(g,0,-.38,.7,.04);},
+  // 3: 장터 (줄무늬 천막 가판)
+  (g,r)=>{plaza(g,1.3,.9,'#E9D8BA',0,0,.05);const cols=[['#F27355','#FFFFFF'],['#8FB5CB','#FFFFFF'],['#FCD96B','#FFFFFF'],['#F2A4A4','#FFFFFF'],['#BDCB8F','#FFFFFF']];
+    for(let i=0;i<4;i++){const b=new THREE.Group();b.position.set(-.42+i*.28,0,-.3+(i%2)*.1);g.add(b);bx(b,.18,.07,.1,'#E9D8BA',0,0,0,.01);awning(b,.2,.06,.1,cols[i%5][0],cols[i%5][1]);
+      for(let k=0;k<3;k++)ball(b,.018,['#F27355','#FCD96B','#8FB5CB','#F2A4A4'][(i+k)%4],-.05+k*.05,.075,0);}
+    cyl(g,.1,.12,.05,'#E9D8BA',0,0,.28,22);cyl(g,.07,.07,.07,'#C1D2DA',0,.05,.28,20);ball(g,.025,'#8FB5CB',0,.13,.28);
+    for(const x of[-.55,.55])ctree(g,x,.35,1);lightPost(g,-.3,.38);lightPost(g,.3,.38);},
+  // 4: 작은 교회 + 정원
+  (g,r)=>{const c=PASTEL[Math.floor(r()*PASTEL.length)];bld(g,{x:-.05,z:-.08,w:.34,d:.5,h:.34,wall:'#F3E7CF',roof:'gableZ',roofC:ROOFS[Math.floor(r()*ROOFS.length)],rh:.16,door:'#7A4C36',rows:2,cols:3});
+    bld(g,{x:.18,z:.2,w:.14,d:.14,h:.6,wall:c,roof:'hip',roofC:'#58524D',rh:.16,rows:4,cols:1});
+    for(const [x,z] of[[-.55,.28],[.58,-.2],[-.5,-.4]])ctree(g,x,z,1);hedge(g,-.3,.35,.3,.04);flowers(g,.4,.42,.26,.08);}
+];
+let GRAND=false;const extras=new THREE.Group();scene.add(extras);let DISTRICTS=[];
+function clearExtras(){while(extras.children.length)extras.remove(extras.children[0]);}
+// 색 변주: 벽·지붕(채도 높은 비-초록)은 색상을 돌리고, 초록(잎)은 구역별로 톤을 바꿈
+function tintGroup(g,dh,wallShift,greenDh,greenDl){
+  g.traverse(o=>{if(!o.isMesh||!o.material||Array.isArray(o.material))return;const m=o.material;if(!m.color||m.transparent||(m.emissiveIntensity||0)>.35)return;
+    const hsl={};m.color.getHSL(hsl);if(hsl.s<.12||hsl.l>.95)return;
+    const isGreen=hsl.h>.17&&hsl.h<.46;
+    const nm=m.clone();
+    if(isGreen){nm.color.offsetHSL(greenDh,.02,greenDl);if(nm.emissive&&nm.emissive.getHex())nm.emissive.offsetHSL(greenDh,.02,greenDl);}
+    else{nm.color.offsetHSL(wallShift,.05,dh);if(nm.emissive&&nm.emissive.getHex())nm.emissive.offsetHSL(wallShift,.05,dh);}
+    o.material=nm;});}
+function buildExtras(){clearExtras();DISTRICTS=[];if(!GRAND||!HAND_DATA)return;
+  const city=ENV.city,B=BLOCKS[city]||BLOCKS.london;
+  const used=[...HAND_DATA.tiles,[0,-52],[-45,-78],[-90,-104],...BLOCK_SLOTS,CANAL_SLOT];
+  // 이 사람의 세계 = 구역(군집)으로 이루어짐: 산책 숲, 베이글 골목, 운하 동네, 학교 동네, 들꽃 언덕, 시내
+  const DZ=[
+    {name:'산책 숲',   x:-175,y:125, pool:['forest','forest','forest','forest','pond'],green:[.012,-.06]},
+    {name:'들꽃 언덕', x:175, y:130, pool:['meadow','meadow','n2','meadow','path','forest'],green:[-.03,.05]},
+    {name:'베이글 골목',x:165, y:-75, pool:['b5','n3','b0','n3','road','n0','b3'],green:[0,0]},
+    {name:'운하 동네', x:-150,y:-120,pool:['pond','n0','pond','path','n2','b4'],green:[.01,0]},
+    {name:'학교 동네', x:15,  y:-165,pool:['n4','b1','n2','park','n1','b2'],green:[0,.02]},
+    {name:'시내',      x:-10, y:105, pool:['n1','n0','b2','n1','b4','n0','b3'],green:[0,0]}];
+  const sites=[];const R=5,ci=-1,cj=0;
+  for(let i=-R;i<=R;i++)for(let j=-R;j<=R;j++){
+    if(Math.max(Math.abs(i),Math.abs(j),Math.abs(i+j))>R)continue;
+    const I=i+ci,J=j+cj,x=45*(I+J),y=26*(I-J);
+    {const dx=x+45,dy=y,rr=Math.hypot(dx,dy),th=Math.atan2(dy,dx);
+     const lim=255+34*Math.sin(th*3+.7)+26*Math.sin(th*5+2.1)+18*Math.sin(th*8+4.0)+14*Math.cos(th*2+1.3);
+     if(rr>lim)continue;}
+    if(used.some(u=>Math.hypot(u[0]-x,u[1]-y)<31))continue;
+    let best=0,bd=1e9;DZ.forEach((d,k)=>{const dd=Math.hypot(d.x-x,d.y-y);if(dd<bd){bd=dd;best=k;}});
+    sites.push({x,y,I,J,z:best});}
+  const rnd=mulberry32(91),placed=[];
+  const hues=[0,.07,.14,-.06,.5,.58,.66,-.14,.3,.82];
+  sites.forEach((st,n)=>{
+    const D=DZ[st.z],near=placed.filter(q=>Math.hypot(q.x-st.x,q.y-st.y)<60).map(q=>q.kind);
+    let kind;for(let t=0;t<30;t++){kind=D.pool[Math.floor(rnd()*D.pool.length)];if(!near.includes(kind)||kind==='forest'||kind==='meadow')break;}
+    if(st.J===1&&st.I<-3&&st.I>-8)kind='road';
+    st.kind=kind;placed.push(st);
+    const cx=st.x*K,cz=-st.y*K;let g;const tg=new THREE.Group();tg.position.set(cx,.533,cz);
+    if(kind==='pond'){g=buildCanalTile();g.rotation.y=Math.floor(rnd()*3)*Math.PI/3;scatterFill(tg,5,.45,.82,200+n);}
+    else if(kind==='road'||kind==='path'){g=buildExtraTile(kind);if(kind==='path')g.rotation.y=Math.floor(rnd()*6)*Math.PI/3;scatterFill(tg,kind==='road'?3:8,.5,.82,300+n);}
+    else{g=buildExtraTile('block');
+      if(kind==='forest'){scatterFill(tg,22,.1,.82,400+n);}
+      else if(kind==='meadow'){scatterFill(tg,10,.15,.8,420+n);}
+      else if(kind==='park'){scatterFill(tg,13,.2,.8,440+n);}
+      else if(kind[0]==='n'){const ig=new THREE.Group();ig.scale.setScalar(1.25);tg.add(ig);NEWB[+kind[1]](ig,mulberry32(1000+n*13));tg.rotation.y=Math.floor(rnd()*6)*Math.PI/3;scatterFill(tg,6,.4,.82,500+n);}
+      else{const ig=new THREE.Group();ig.scale.setScalar(1.25);tg.add(ig);(B[+kind[1]]||B[(+kind[1])%B.length]||B[0])(ig);tg.rotation.y=Math.floor(rnd()*6)*Math.PI/3;scatterFill(tg,6,.4,.82,500+n);}}
+    // 색 변주 (구역마다 톤이 다름)
+    const ws=hues[Math.floor(rnd()*hues.length)];
+    tintGroup(tg,(rnd()-.5)*.06,['b0','b1','b2','b3','b4','b5'].includes(kind)?ws:0,D.green[0]+(rnd()-.5)*.025,D.green[1]+(rnd()-.5)*.05);
+    g.position.set(cx,0,cz);extras.add(g);extras.add(tg);});
+  DISTRICTS=DZ.map(d=>({name:d.name,x:d.x*K,z:-d.y*K}));
+}
+window.__api.districts=()=>DISTRICTS.map(d=>{const v=new THREE.Vector3(d.x,1.0,d.z).project(cam);return {name:d.name,sx:(v.x+1)/2*innerWidth,sy:(1-v.y)/2*innerHeight};});
+window.__api.grand=async(on)=>{GRAND=!!on;buildExtras();return GRAND;};
+window.__api.env=async(e={})=>{Object.assign(ENV,e);await buildHand();envUI&&envUI.sync();if(GRAND)setTimeout(buildExtras,1600);return {...ENV};};
 let envUI=null;
 if(HAND&&!qs.get('render')){const box=document.createElement('div');box.className='envbar';box.style.cssText='position:fixed;top:14px;right:14px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;z-index:5';
   const opts=[['season','spring','봄'],['season','summer','여름'],['season','autumn','가을'],['season','winter','겨울'],['time','day','낮'],['time','night','밤']];const btns=[];
