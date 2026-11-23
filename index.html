@@ -957,10 +957,10 @@ function scatterFill(g,n,rmin=.45,rmax=.8,seed=1){g.updateMatrixWorld(true);cons
   pts.forEach(([x,z],i)=>{if(i%3===2)cbush(g,x,z,1+r()*.4);else ctree(g,x,z,.9+r()*.3);});}
 
 /* ====== 계절 · 밤낮 (scene=hand) — ?season=spring|summer|autumn|winter&time=day|night ====== */
-const ENV={season:qs.get('season')||'summer',time:qs.get('time')||'day',city:HCITY[qs.get('city')]?qs.get('city'):'base'};
+const ENV={season:qs.get('season')||'summer',time:qs.get('time')||'day',weather:qs.get('weather')||'clear',city:HCITY[qs.get('city')]?qs.get('city'):'base'};
 const SEASON={
   spring:{grass:'#C9D49D',crown:['#A4AF7E','#BDCB8F','#929971'],bloom:['#F2A4A4','#F8C8C5','#FCE1DB'],bush:['#A4AF7E','#929971'],river:'#8FB5CB',snow:0},
-  summer:{grass:'#BDCB8F',crown:['#A4AF7E','#929971','#9AA376'],bloom:null,bush:['#929971','#A4AF7E'],river:'#8FB5CB',snow:0},
+  summer:{grass:'#AFCF6E',crown:['#7DB04C','#669A42','#93C25A'],bloom:null,bush:['#669A42','#86B653'],river:'#8FB5CB',snow:0},
   autumn:{grass:'#D3D082',crown:['#FCD96B','#F27355','#F2A4A4','#D7BA61','#CF684F'],bloom:null,bush:['#CF684F','#D7BA61','#A4AF7E'],river:'#8FB5CB',snow:0},
   winter:{grass:'#F4F5F3',crown:['#E3E5E4','#FFFFFF','#C1D2DA'],bloom:null,bush:['#E3E5E4','#C1D2DA'],river:'#C1D2DA',snow:1},
 };
@@ -977,6 +977,12 @@ function applyEnvLight(){
   if(rim){rim.color.set(n?'#C9DDE8':'#E3ECFF');rim.intensity=n?.7:.25;}
   ground.material.opacity=n?.4:.27;
   renderer.toneMappingExposure=n?1.0:(+qs.get('exp')||.96);
+  // 노을: 낮게 깔린 주황빛 햇살 · 흐림/비: 해가 가려져 그림자가 옅고 차분해짐
+  const ss=ENV.time==='sunset',wx=ENV.weather||'clear';
+  if(ss){sun.color.set('#FF9A6A');sun.intensity=2.3;hemi.color.set('#FFC6B0');hemi.groundColor.set('#8F6E7A');hemi.intensity=.6;
+    if(fill){fill.color.set('#C9A9C8');fill.intensity=.6;}if(rim){rim.color.set('#FFB07A');rim.intensity=.9;}renderer.toneMappingExposure=.92;}
+  if(wx!=='clear'){const k=wx==='rain'?.32:.5;sun.intensity*=k;if(!n){hemi.color.set(ss?'#D9C2C4':'#DDE4EC');hemi.groundColor.set(ss?'#8C7A82':'#B9B4B0');hemi.intensity+=wx==='rain'?.35:.3;
+    if(fill){fill.color.set(ss?'#B9A7B8':'#C2CCD6');fill.intensity*=1.1;}}ground.material.opacity*=wx==='rain'?.45:.65;renderer.toneMappingExposure*=wx==='rain'?.9:.97;}
 }
 function landMat(){const sp=SEA();return new THREE.MeshStandardMaterial({color:sp.grass,roughness:.92,map:sp.snow?null:paintGrassTex(),envMapIntensity:.15});}
 const _tc={};
@@ -1270,7 +1276,7 @@ const cap=document.createElement('div');cap.className='capt';cap.style.cssText='
 const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
 function setFocus(it){focus=it;if(window.parent!==window)window.parent.postMessage({nostos:'focus',type:it?it.type:null,label:it?(it.label||null):null},'*');if(it){it.hop=nowMs();cap.textContent=it.label||MEM[it.type].label;cap.style.opacity=1;}else cap.style.opacity=0;}
 function pick(ev){const r=renderer.domElement.getBoundingClientRect();ndc.set(((ev.clientX-r.left)/r.width)*2-1,-((ev.clientY-r.top)/r.height)*2+1);ray.setFromCamera(ndc,cam);
-  let best=null,bd=1e9;for(const it of pool()){const h=ray.intersectObjects(it.tile?[it.obj,it.tile]:[it.obj],true);if(h.length&&h[0].distance<bd){bd=h[0].distance;best=it;}}return best;}
+  let best=null,bd=1e9;for(const it of pool()){const h=ray.intersectObjects(it.tile?[it.obj,it.tile]:[it.obj],true);const dd=h.length?h[0].distance+(/^tile\d/.test(it.type)?.05:0):1e9;if(dd<bd){bd=dd;best=it;}}return best;}
 renderer.domElement.addEventListener('pointerdown',e=>{drag=e.clientX;downX=e.clientX;downY=e.clientY;moved=0;});
 addEventListener('pointerup',e=>{if(drag!==null&&Math.hypot(e.clientX-downX,e.clientY-downY)<5){const it=pick(e);setFocus(it&&it!==focus?it:null);}drag=null;});
 addEventListener('pointermove',e=>{if(drag!==null){tYaw+=(e.clientX-drag)*.008;drag=e.clientX;}});
@@ -1397,6 +1403,14 @@ function buildExtras(){clearExtras();DISTRICTS=[];if(!GRAND||!HAND_DATA)return;
   DISTRICTS=DZ.map(d=>({name:d.name,x:d.x*K,z:-d.y*K}));
 }
 window.__api.districts=()=>DISTRICTS.map(d=>{const v=new THREE.Vector3(d.x,1.0,d.z).project(cam);return {name:d.name,sx:(v.x+1)/2*innerWidth,sy:(1-v.y)/2*innerHeight};});
+// 타일 하나만 따로 찍어 PNG로 돌려줌 (앱 아이콘용)
+window.__api.tileShot=(size=320,pad=1.12,type=null,only=false)=>{let g,own=false,fit=null,hid=[];if(type){const it=pool().find(i=>i.type===type);if(!it)return null;g=it.obj;while(g.parent&&g.parent!==world)g=g.parent;if(only&&it.obj!==g){fit=it.obj;const keep=new Set();it.obj.traverse(o=>keep.add(o));let p=it.obj;while(p){keep.add(p);p=p.parent;}g.traverse(o=>{if(o.isMesh&&!keep.has(o)&&o.visible){o.visible=false;hid.push(o);}});}}else{g=buildCanalTile();own=true;}const vis=world.children.map(c=>c.visible);world.children.forEach(c=>c.visible=false);if(own){world.add(g);g.position.set(0,0,0);}g.visible=true;world.updateMatrixWorld(true);
+  const keep={p:cam.position.clone(),q:cam.quaternion.clone(),l:cam.left,r:cam.right,t:cam.top,b:cam.bottom,z:cam.zoom},gv=ground.visible;ground.visible=false;
+  const box=new THREE.Box3().setFromObject(fit||g),c=box.getCenter(new THREE.Vector3()),dir=cam.getWorldDirection(new THREE.Vector3());cam.position.copy(c).addScaledVector(dir,-30);cam.lookAt(c);cam.updateMatrixWorld(true);
+  const inv=cam.matrixWorldInverse;let mx=0,my=0;for(const x of[box.min.x,box.max.x])for(const y of[box.min.y,box.max.y])for(const z of[box.min.z,box.max.z]){const v=new THREE.Vector3(x,y,z).applyMatrix4(inv);mx=Math.max(mx,Math.abs(v.x));my=Math.max(my,Math.abs(v.y));}
+  const el=renderer.domElement,asp=el.width/el.height,h=Math.max(mx,my)*pad/Math.min(asp,1);cam.left=-h*asp;cam.right=h*asp;cam.top=h;cam.bottom=-h;cam.zoom=1;cam.updateProjectionMatrix();
+  renderer.render(scene,cam);const sq=Math.min(el.width,el.height),cv=document.createElement('canvas');cv.width=cv.height=size;cv.getContext('2d').drawImage(el,(el.width-sq)/2,(el.height-sq)/2,sq,sq,0,0,size,size);const url=cv.toDataURL('image/png');
+  if(own)world.remove(g);hid.forEach(h=>h.visible=true);world.children.forEach((ch,i)=>ch.visible=vis[i]);ground.visible=gv;cam.position.copy(keep.p);cam.quaternion.copy(keep.q);Object.assign(cam,{left:keep.l,right:keep.r,top:keep.t,bottom:keep.b,zoom:keep.z});cam.updateProjectionMatrix();return url;};
 window.__api.grand=async(on)=>{GRAND=!!on;buildExtras();return GRAND;};
 window.__api.env=async(e={})=>{Object.assign(ENV,e);await buildHand();envUI&&envUI.sync();if(GRAND)setTimeout(buildExtras,1600);return {...ENV};};
 let envUI=null;
