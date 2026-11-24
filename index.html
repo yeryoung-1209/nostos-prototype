@@ -957,7 +957,7 @@ function scatterFill(g,n,rmin=.45,rmax=.8,seed=1){g.updateMatrixWorld(true);cons
   pts.forEach(([x,z],i)=>{if(i%3===2)cbush(g,x,z,1+r()*.4);else ctree(g,x,z,.9+r()*.3);});}
 
 /* ====== 계절 · 밤낮 (scene=hand) — ?season=spring|summer|autumn|winter&time=day|night ====== */
-const ENV={season:qs.get('season')||'summer',time:qs.get('time')||'day',weather:qs.get('weather')||'clear',city:HCITY[qs.get('city')]?qs.get('city'):'base'};
+const ENV={season:qs.get('season')||'summer',time:qs.get('time')||'day',weather:qs.get('weather')||'clear',city:HCITY[qs.get('city')]?qs.get('city'):'base',fresh:qs.get('fresh')==='1'};
 const SEASON={
   spring:{grass:'#C9D49D',crown:['#A4AF7E','#BDCB8F','#929971'],bloom:['#F2A4A4','#F8C8C5','#FCE1DB'],bush:['#A4AF7E','#929971'],river:'#8FB5CB',snow:0},
   summer:{grass:'#AFCF6E',crown:['#7DB04C','#669A42','#93C25A'],bloom:null,bush:['#669A42','#86B653'],river:'#8FB5CB',snow:0},
@@ -1170,6 +1170,8 @@ async function buildHand(){
   if(BLOCKS[ENV.city])BLOCK_SLOTS.forEach((p,i)=>extras.push({kind:'block',x:p[0],y:p[1],slot:i}));
   extras.forEach(e=>{const g=buildExtraTile(e.kind);const cx=e.x*K,cz=-e.y*K;g.position.set(cx,0,cz);
     list.push({gr:{kind:'ext',key:e.kind,slot:e.slot,objs:[]},grp:g,lands:g.userData.lands,cx,cz,ribbons:g.userData.ribbons,extra:true});});
+  // 새 세계(D+1): 가운데 타일 하나(집 한 채·나무 몇 그루)만 남김
+  if(ENV.fresh){for(let i=list.length-1;i>=0;i--){const p=list[i].grp.position;if(list[i].extra||Math.hypot(p.x,p.z)>1.0)list.splice(i,1);}}
   const order={tile:0,ext:0,houseA:1,houseB:1,tree:2,bush:3,stones:4,steps:4,cat:5};
   list.sort((a,b)=>(order[a.gr.kind]-order[b.gr.kind]));
   for(const L of list)world.add(L.grp);
@@ -1238,11 +1240,11 @@ async function buildHand(){
     else{const base={houseA:900,houseB:1050,tree:1250,bush:1450,lm:1500,prop:1700,cityb:2450,stones:1650,steps:1750,cat:1900,veh:2600}[L.gr.kind]||1500;
       const n=list.filter(x=>x.gr.kind===L.gr.kind);pop(L.grp,base+n.indexOf(L)*(L.gr.kind==='tree'?55:L.gr.kind==='bush'?35:0));}
   }
-  const tc=data.tiles.concat(extras.map(e=>[e.x,e.y]));let sx=0,sz=0;tc.forEach(([x,y])=>{sx+=x*K;sz+=-y*K;});HAND_C.x=sx/tc.length;HAND_C.z=sz/tc.length;
+  const tc=data.tiles.concat(extras.map(e=>[e.x,e.y]));let sx=0,sz=0;tc.forEach(([x,y])=>{sx+=x*K;sz+=-y*K;});HAND_C.x=ENV.fresh?0:sx/tc.length;HAND_C.z=ENV.fresh?0:sz/tc.length;
   tYaw=yaw=Math.PI/2+(+qs.get('yaw')||0.16);
   document.getElementById('title').textContent='3D world · '+CT().label;
   document.querySelectorAll('button.city').forEach(b=>b.classList.toggle('on',b.dataset.c===ENV.city));
-  if(_canalLater)placeCanal(false);
+  if(_canalLater&&!ENV.fresh)placeCanal(false);
   window.__ready=true;
 }
 const HAND_C={x:0,z:0},VIEW={}; // VIEW: 임베드(프로토타입)에서 카메라 덮어쓰기 {vh,cx,cz,fz}

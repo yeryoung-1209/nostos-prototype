@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Nostos Prototype</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&display=swap">
 <style>
   :root{
     --ink:#1F1B19;--ink2:#58524D;--ink3:#8C857F;--line:#ECEAE7;--bg:#FFFFFF;--world:#F4F4F7;--edge:#FFFFFF;
@@ -158,6 +159,13 @@
   .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:28px 28px 0 0;box-shadow:0 -10px 40px rgba(40,30,30,.08);transition:transform .45s cubic-bezier(.3,.9,.3,1)}
   .handle{width:36px;height:4px;border-radius:2px;background:#E2DFDB;margin:12px auto 0}
   .muted{color:var(--ink3)}
+  /* D+ 숫자: 동글동글한 Fredoka */
+  #dday{font-family:"Fredoka","Pretendard",sans-serif;font-weight:600;font-size:34px;letter-spacing:.2px;line-height:1}
+  /* 노을 · 흐림 · 비: 하늘이 진해서 상단 글씨를 흰색으로 */
+  .phone[data-time=sunset] #s-home .top,.phone[data-weather=cloudy] #s-home .top,.phone[data-weather=rain] #s-home .top{color:#fff}
+  .phone[data-time=sunset] #s-home .top .muted,.phone[data-weather=cloudy] #s-home .top .muted,.phone[data-weather=rain] #s-home .top .muted{color:rgba(255,255,255,.92)}
+  .phone[data-time=sunset] #s-home .top #dday,.phone[data-time=sunset] #s-home .top .muted,.phone[data-weather=cloudy] #s-home .top #dday,.phone[data-weather=cloudy] #s-home .top .muted,.phone[data-weather=rain] #s-home .top #dday,.phone[data-weather=rain] #s-home .top .muted{text-shadow:0 1px 8px rgba(60,40,70,.28)}
+  .phone[data-time=sunset]:not(.night) .top::before,.phone[data-weather=cloudy]:not(.night) .top::before,.phone[data-weather=rain]:not(.night) .top::before{background:linear-gradient(rgba(70,60,90,.16) 0%,rgba(70,60,90,.07) 50%,rgba(70,60,90,0) 100%)}
   .h1{font-size:30px;font-weight:700;letter-spacing:-.5px}
   .row{display:flex;align-items:center}
   /* 핀 */
@@ -534,10 +542,10 @@ const whenReady=()=>new Promise(r=>{const t=setInterval(()=>{const w=frame.conte
 const VIEWS={home:{top:128,h:472,vh:11.3},explore:{top:130,h:510,vh:13.5,fz:1.45},day:{top:110,h:400,vh:11.5,fz:1.2},friend:{top:96,h:440,vh:13},done:{top:96,h:400,vh:18,fz:1},full:{top:128,h:472,vh:12.5}};
 function setView(k){const v=VIEWS[k];const T=v.top,H=v.h+T;wrap.style.top='0px';wrap.style.height=H+'px';
   // 월드가 화면에서 놓이는 자리와 크기는 그대로 두고, 위쪽(탑바 뒤)까지 월드를 채움
-  if(W())W().view({vh:v.vh*H/v.h,fz:v.fz||1.3,ty:.9+(T/2)/(v.h/v.vh)/.816*(+(window.TYK||1))});}
+  const vh=v.vh*(FRESH&&(k==='home'||k==='full')?.62:1);if(W())W().view({vh:vh*H/v.h,fz:v.fz||1.3,ty:.9+(T/2)/(v.h/vh)/.816*(+(window.TYK||1))});}
 
 /* ---------- 상태 ---------- */
-let cur='home',stack=[],explType='block4',followIdx=-1,city='london',pinsOn=false,notified=false;
+let FRESH=false,cur='home',stack=[],explType='block4',followIdx=-1,city='london',pinsOn=false,notified=false;
 function show(id,push=true){
   if(push&&cur!==id)stack.push(cur);cur=id;
   $$('.scr').forEach(s=>s.classList.toggle('on',s.id==='s-'+id));
@@ -551,7 +559,7 @@ function show(id,push=true){
   if(id==='my'||id==='memory'||id==='visit'||id==='date'){wrap.style.opacity=0;wrap.style.pointerEvents='none';}else{wrap.style.opacity='';wrap.style.pointerEvents='';}
   if(id==='day')renderDay();
   if(id==='done'){countUp();}
-  {const wc=id==='friend'?'newyork':'london';if(W()&&W().cityNow!==wc&&(id==='friend'||W().cityNow==='newyork')){W().cityNow=wc;W().env({city:wc});}}
+  {const wc=id==='friend'?'newyork':city;if(W()&&W().cityNow!==wc&&(id==='friend'||W().cityNow==='newyork')){W().cityNow=wc;W().env({city:wc,fresh:id==='friend'?false:FRESH});}}
   if(W()){if(id==='done')setTimeout(()=>{if(cur==='done'){W().grand(true);setTimeout(()=>dlabels(true),900);}},350);else{W().grand(false);dlabels(false);}}
 }
 function back(){if(followIdx>=0){followIdx=-1;}const p=stack.pop()||'home';show(p,false);}
@@ -606,7 +614,7 @@ function showPins(on){pinsOn=on;$$('.pin').forEach((p,i)=>setTimeout(()=>p.class
 function tick(){
   const w=W();
   if(w&&w.project){
-    $$('.pin').forEach(p=>{const q=w.project(p.dataset.t,.75);if(q){p.style.left=q[0]+'px';p.style.top=q[1]+'px';}});
+    $$('.pin').forEach(p=>{const q=w.project(p.dataset.t,.75);p.style.visibility=q?'':'hidden';if(q){p.style.left=q[0]+'px';p.style.top=q[1]+'px';}});
     if(cur==='explore'){const q=w.project(explType,.6);const tg=$('#exTag');if(q){tg.style.left=q[0]+'px';tg.style.top=(wrap.offsetTop+q[1])+'px';}}
     if(cur==='day')drawRoute();
   }
@@ -714,10 +722,10 @@ function drawRoute(){const w=W();if(followIdx>=0){$('#route').innerHTML='';retur
 /* ---------- 귀국 후 ---------- */
 function countUp(){$$('#s-done [data-n]').forEach(b=>{const n=+b.dataset.n;let k=0;const t=setInterval(()=>{k++;b.textContent=Math.round(n*Math.min(1,k/30));if(k>=30)clearInterval(t);},30);});}
 $('#doneSpin').onclick=()=>W()&&W().spin();
-$('#doneNext').onclick=async()=>{await setCity('seoul');$('#dday').textContent='D+1';$('#homeSub').textContent='서울에서 자라는 나의 세계 · 4명과 함께 보는 중';show('home');toast('서울에서 새 세계가 시작됐어요');};
+$('#doneNext').onclick=async()=>{await setCity(city==='seoul'?'london':'seoul',true);$('#dday').textContent='D+1';$('#homeSub').textContent=CITYK[city]+'에서 자라는 나의 세계 · 4명과 함께 보는 중';show('home');toast(CITYK[city]+'에서 새 세계가 시작됐어요');};
 
 /* ---------- 세계 설정 (왼쪽 패널) ---------- */
-async function setCity(c){city=c;$$('#segCity button').forEach(b=>b.classList.toggle('on',b.dataset.city===c));await W().env({city:c});
+async function setCity(c,fresh=false){city=c;FRESH=fresh;$$('#segCity button').forEach(b=>b.classList.toggle('on',b.dataset.city===c));W().cityNow=c;await W().env({city:c,fresh});
   $('#doneTitle').textContent=CITYK[c]+'에서의 382일';$('#homeSub').textContent=CITYK[c]+'에서 자라는 나의 세계 · 4명과 함께 보는 중';$('#doneNext').textContent=(c==='seoul'?'런던':'서울')+'에서 새 세계 시작하기';}
 $$('#segCity button').forEach(b=>b.onclick=()=>setCity(b.dataset.city));
 $$('#nav [data-go]').forEach(b=>b.onclick=()=>{const g=b.dataset.go;closeFull();
